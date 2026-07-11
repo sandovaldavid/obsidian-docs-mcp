@@ -1,0 +1,56 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RuntimeIdentifiers>win-x64;win-arm64;osx-arm64;linux-x64;linux-arm64;linux-musl-x64</RuntimeIdentifiers>
+    <OutputType>Exe</OutputType>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+
+    <!-- Set up the NuGet package to be an MCP server -->
+    <PackAsTool>true</PackAsTool>
+    <PackageType>McpServer</PackageType>
+
+    <!-- Set up the MCP server to be a self-contained application that does not rely on a shared framework -->
+    <SelfContained>true</SelfContained>
+    <PublishSelfContained>true</PublishSelfContained>
+
+    <!-- Set up the MCP server to be a single file executable -->
+    <PublishSingleFile>true</PublishSingleFile>
+
+    <!-- Set recommended package metadata -->
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageId>obsidian-docs-mcp</PackageId>
+    <ToolCommandName>obsidian-docs-mcp</ToolCommandName>
+    <PackageVersion>0.1.0-beta</PackageVersion>
+    <PackageTags>AI; MCP; server; stdio; obsidian</PackageTags>
+    <Description>MCP server for .NET 10 that provides hybrid (semantic + keyword) search over the Obsidian documentation (Developer Docs and User Help).</Description>
+    <Authors>David Sandoval</Authors>
+    <PackageProjectUrl>https://github.com/sandovaldavid/obsidian-docs-mcp</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/sandovaldavid/obsidian-docs-mcp</RepositoryUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+  </PropertyGroup>
+
+  <!-- Include additional files for browsing the MCP server. -->
+  <ItemGroup>
+    <None Include=".mcp\server.json" Pack="true" PackagePath="/.mcp/" />
+    <None Include="README.md" Pack="true" PackagePath="/" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Markdig" Version="1.3.2" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.9" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.9" />
+    <PackageReference Include="ModelContextProtocol" Version="1.2.0" />
+  </ItemGroup>
+
+  <!-- Auto-install the repo's Husky.Net git hooks on local restore. Only runs for contributors
+       building from source (not for `dotnet tool install -g` consumers, since that installs
+       pre-built package contents and never evaluates this target). Skipped in CI and can be
+       disabled with `-p:HUSKY=0`. -->
+  <Target Name="husky" BeforeTargets="Restore;CollectPackageReferences" Condition="'$(HUSKY)' != '0' and '$(CI)' == ''">
+    <Exec Command="dotnet husky install" StandardOutputImportance="Low" StandardErrorImportance="High" WorkingDirectory="$(MSBuildProjectDirectory)/.." ContinueOnError="true" />
+  </Target>
+
+</Project>

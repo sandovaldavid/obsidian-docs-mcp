@@ -1,0 +1,26 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+# Enforce Conventional Commits with a mandatory scope: type(scope): description
+commit_msg_file="$1"
+header=$(head -n1 "$commit_msg_file")
+
+types="feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert|arch|config|lint"
+pattern="^(${types})(\([a-z0-9./-]+\))!?: [a-z].{0,48}$"
+
+if ! echo "$header" | grep -qE "$pattern"; then
+  echo "Invalid commit message:"
+  echo "  $header"
+  echo ""
+  echo "Commits must follow Conventional Commits with a required scope:"
+  echo "  type(scope): imperative, lowercase description (max 50 chars, no trailing period)"
+  echo ""
+  echo "Allowed types: feat fix docs style refactor perf test build ci chore revert arch config lint"
+  echo "Example: feat(indexer): parallelize embedding generation"
+  exit 1
+fi
+
+if echo "$header" | grep -qE '\.$'; then
+  echo "Commit header must not end with a period: $header"
+  exit 1
+fi
