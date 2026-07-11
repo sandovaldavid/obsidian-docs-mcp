@@ -3,6 +3,7 @@
 [![CI](https://github.com/sandovaldavid/obsidian-docs-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/sandovaldavid/obsidian-docs-mcp/actions/workflows/ci.yml)
 [![NuGet](https://img.shields.io/nuget/v/obsidian-docs-mcp.svg)](https://www.nuget.org/packages/obsidian-docs-mcp)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![skills.sh](https://skills.sh/b/sandovaldavid/obsidian-docs-mcp)](https://skills.sh/sandovaldavid/obsidian-docs-mcp)
 
 A **Model Context Protocol (MCP)** server, packaged as a **.NET Global Tool**, that lets AI agents search the official Obsidian documentation extremely efficiently — both semantically and by exact keyword:
 
