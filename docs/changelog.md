@@ -5,6 +5,13 @@ nav_order: 7
 
 # Changelog
 
+## [0.3.3-beta](https://github.com/sandovaldavid/obsidian-docs-mcp/compare/v0.3.2-beta...v0.3.3-beta) (2026-07-11)
+
+
+### Bug Fixes
+
+* **github:** sync develop on every push to main ([#39](https://github.com/sandovaldavid/obsidian-docs-mcp/issues/39)) ([2fef10a](https://github.com/sandovaldavid/obsidian-docs-mcp/commit/2fef10ae5b3cec6e20a0adeb899b6a4929d19602))
+
 ## [0.3.2-beta](https://github.com/sandovaldavid/obsidian-docs-mcp/compare/v0.3.1-beta...v0.3.2-beta) (2026-07-11)
 
 
