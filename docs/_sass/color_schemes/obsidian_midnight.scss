@@ -2,6 +2,12 @@
 // Obsidian's signature purple as the accent color.
 // See: https://just-the-docs.com/docs/customization/#customizing-colors
 
+// A custom scheme is implicitly based on `light` unless it imports `dark`
+// first — without this, code blocks keep the `light` scheme's syntax-
+// highlighting colors (tuned for a white background), which is nearly
+// invisible against our dark background (e.g. punctuation like `{`/`}`).
+@import "./color_schemes/dark";
+
 // Base surfaces — midnight/navy blue instead of the default dark grey.
 $body-background-color: #0b1120;
 $sidebar-color: #10162f;

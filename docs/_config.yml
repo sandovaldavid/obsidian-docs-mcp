@@ -24,7 +24,7 @@ nav_external_links:
 back_to_top: true
 back_to_top_text: "Back to top"
 
-footer_content: "Copyright &copy; 2026 David Sandoval. Distributed under the MIT License."
+footer_content: 'Copyright &copy; 2026 David Sandoval. Distributed under the MIT License. &nbsp; <a href="https://github.com/sandovaldavid/obsidian-docs-mcp/releases/latest"><img src="https://img.shields.io/github/v/release/sandovaldavid/obsidian-docs-mcp?include_prereleases&sort=semver&style=flat-square&label=latest%20release&color=7c3aed&labelColor=10162f" alt="Latest release version" style="vertical-align:middle;"></a>'
 
 plugins:
   - jekyll-remote-theme
