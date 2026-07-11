@@ -87,9 +87,12 @@ jobs:
             --title "docs(changelog): sync changelog page" \
             --body "Automated sync of docs/changelog.md from CHANGELOG.md after a release-please release. Merging this triggers the Pages deploy (docs.yml watches docs/** on main)."
 
+  # Runs on every push to main (not just release-please releases) — anything that lands on
+  # main outside of develop (a release, the sync-changelog PR above, a hotfix) needs the same
+  # sync back. The step below is a no-op when nothing needs syncing, so this is safe to run
+  # unconditionally.
   sync-develop:
     needs: release-please
-    if: ${{ needs.release-please.outputs.release_created == 'true' }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -137,4 +140,4 @@ jobs:
         run: |
           gh pr create --repo ${{ github.repository }} --base develop --head "${{ steps.sync.outputs.branch }}" \
             --title "chore(repo): merge main into develop" \
-            --body "Automated sync after a release-please release, so develop and main share the same commit history for the released version. Uses a merge commit intentionally — see CONTRIBUTING.md's branching model section for why. Merge with **Create a merge commit**, same as this PR was created with."
+            --body "Automated sync after a push to main, so develop and main share the same commit history. Uses a merge commit intentionally — see CONTRIBUTING.md's branching model section for why. Merge with **Create a merge commit**, same as this PR was created with."
