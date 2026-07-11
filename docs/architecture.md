@@ -16,7 +16,7 @@ The server is a .NET 10 [Generic Host](https://learn.microsoft.com/dotnet/core/e
 There are four moving pieces:
 
 ```mermaid
-flowchart LR
+flowchart TD
     IDX["ObsidianIndexer"]
     TOOLS["ObsidianSearchTools<br/>(MCP tools)"]
     OLLAMA[("Ollama<br/>embeddings")]
