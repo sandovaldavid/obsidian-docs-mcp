@@ -40,12 +40,17 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      actions: write
+      pull-requests: write
     steps:
       - name: Checkout main
         uses: actions/checkout@v4
         with:
           ref: main
+
+      - name: Configure git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
       - name: Regenerate docs/changelog.md from CHANGELOG.md
         run: |
@@ -58,20 +63,29 @@ jobs:
             cat CHANGELOG.md
           } > docs/changelog.md
 
-      - name: Commit changelog page
-        uses: EndBug/add-and-commit@v9
-        with:
-          add: docs/changelog.md
-          message: 'docs: sync changelog page'
-          default_author: github_actions
-
-      # Pushes authenticated with the default GITHUB_TOKEN do not trigger other
-      # workflows (GitHub's anti-recursion rule), so docs.yml would never fire
-      # from the commit above. Trigger it explicitly instead.
-      - name: Trigger Pages deploy
+      # Direct pushes to main are blocked by branch rulesets (same reason
+      # sync-develop routes through a PR instead of committing straight to
+      # main) — open a PR here too. Its merge (a normal push by a human, not
+      # the default GITHUB_TOKEN) triggers docs.yml on its own since that
+      # workflow watches docs/** on main — no separate dispatch needed.
+      - name: Open changelog sync PR
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh workflow run docs.yml --repo ${{ github.repository }} --ref main
+        run: |
+          if git diff --quiet -- docs/changelog.md; then
+            echo "No changelog changes to sync."
+            exit 0
+          fi
+
+          branch="chore/sync-changelog-${{ github.run_id }}"
+          git checkout -b "$branch"
+          git add docs/changelog.md
+          git commit -m "docs(changelog): sync changelog page"
+          git push -u origin "$branch"
+
+          gh pr create --repo ${{ github.repository }} --base main --head "$branch" \
+            --title "docs(changelog): sync changelog page" \
+            --body "Automated sync of docs/changelog.md from CHANGELOG.md after a release-please release. Merging this triggers the Pages deploy (docs.yml watches docs/** on main)."
 
   sync-develop:
     needs: release-please
