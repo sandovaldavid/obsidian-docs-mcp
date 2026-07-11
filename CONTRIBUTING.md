@@ -54,13 +54,22 @@ docs(setup): update instructions for Windows
 ci(github): add dotnet format workflow
 ```
 
+## Branching model
+
+- **`develop`** is the integration branch — target this with feature/fix branches.
+- **`main`** only receives merges from `develop` (or a hotfix branch) and is what release-please and the docs/NuGet publish pipelines watch. Pushing to `main` or `develop` directly is blocked; both only accept changes via pull request, and neither branch can be deleted.
+- PRs into **`develop`** merge via **squash** or **rebase** (no merge commits — keeps `develop`'s history linear).
+- PRs into **`main`** merge via **squash** or **merge commit** (no rebase — preserves the merge point from `develop`).
+- Every PR must pass the `build` (CI) and `dotnet-format` checks before it's mergeable.
+- Feature branches are auto-deleted after merge; `main`/`develop` never are.
+
 ## Pull requests
 
-1. Fork the repo and create a branch from `main`.
+1. Fork the repo and create a branch from `develop`.
 2. Make your changes, keeping commits Conventional-Commits-formatted with a scope.
 3. Confirm `dotnet build -c Release`, `dotnet pack -c Release`, and `dotnet format --verify-no-changes` succeed locally.
 4. Update relevant docs (`README.md`, `docs/`) if the change is user-facing.
-5. Open a pull request describing the change and the motivation behind it.
+5. Open a pull request against `develop` describing the change and the motivation behind it.
 
 ## Reporting bugs / requesting features
 

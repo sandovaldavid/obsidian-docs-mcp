@@ -1,5 +1,4 @@
 #!/bin/sh
-. "$(dirname "$0")/_/husky.sh"
 
 # Enforce Conventional Commits with a mandatory scope: type(scope): description
 commit_msg_file="$1"

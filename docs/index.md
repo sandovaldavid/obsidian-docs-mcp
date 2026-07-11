@@ -46,4 +46,5 @@ You don't need to clone Obsidian's doc repositories. The indexer downloads them 
 | [Architecture](architecture) | How indexing, hybrid search, and RRF fusion work |
 | [Tools Reference](tools-reference) | The 3 MCP tools this server exposes |
 | [FAQ](faq) | Troubleshooting common issues |
+| [Contributing](contributing) | Branching model, commit conventions, and how to build locally |
 | [Changelog](changelog) | Release history |
