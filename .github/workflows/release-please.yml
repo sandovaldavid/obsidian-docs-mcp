@@ -1,0 +1,61 @@
+name: release-please
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+    steps:
+      - name: Run release-please
+        id: release
+        uses: googleapis/release-please-action@v4
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+  sync-changelog:
+    needs: release-please
+    if: ${{ needs.release-please.outputs.release_created == 'true' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: write
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Regenerate docs/changelog.md from CHANGELOG.md
+        run: |
+          {
+            echo '---'
+            echo 'title: Changelog'
+            echo 'nav_order: 6'
+            echo '---'
+            echo
+            cat CHANGELOG.md
+          } > docs/changelog.md
+
+      - name: Commit changelog page
+        uses: EndBug/add-and-commit@v9
+        with:
+          add: docs/changelog.md
+          message: 'docs: sync changelog page'
+          default_author: github_actions
+
+      # Pushes authenticated with the default GITHUB_TOKEN do not trigger other
+      # workflows (GitHub's anti-recursion rule), so docs.yml would never fire
+      # from the commit above. Trigger it explicitly instead.
+      - name: Trigger Pages deploy
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run docs.yml --ref main
