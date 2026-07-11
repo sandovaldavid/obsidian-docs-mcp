@@ -15,7 +15,7 @@ This is a small, solo-maintained project, so the contribution process is kept li
 
 - **`develop`** is the integration branch — target this with feature/fix branches.
 - **`main`** only receives merges from `develop` and is what the release and docs/NuGet publish pipelines watch. Direct pushes to either branch are blocked; both only accept changes via pull request.
-- PRs into `develop` merge via squash or rebase; PRs into `main` merge via squash or merge commit.
+- PRs into both `develop` and `main` merge via squash or merge commit (no rebase). Use a merge commit specifically when syncing `main` back into `develop` after a release, to keep commit ancestry intact.
 - Every PR must pass the `build` and `dotnet-format` checks before it's mergeable.
 
 ## Building and running locally
