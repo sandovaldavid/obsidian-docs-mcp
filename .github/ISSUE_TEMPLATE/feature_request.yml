@@ -1,0 +1,23 @@
+name: Feature Request
+description: Suggest an idea or improvement for obsidian-docs-mcp
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / motivation
+      description: What problem would this feature solve? Is it related to search relevance, indexing, installation, MCP client support, etc.?
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+    validations:
+      required: false

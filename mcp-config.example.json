@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "obsidian-docs-mcp": {
+      "command": "dotnet",
+      "args": [
+        "run",
+        "--project",
+        "<ABSOLUTE_PATH_TO_PROJECT>/ObsidianDocsMcp/ObsidianDocsMcp.csproj",
+        "--",
+        "--no-build"
+      ],
+      "env": {}
+    }
+  }
+}
