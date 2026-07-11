@@ -39,7 +39,7 @@ jobs:
           {
             echo '---'
             echo 'title: Changelog'
-            echo 'nav_order: 6'
+            echo 'nav_order: 7'
             echo '---'
             echo
             cat CHANGELOG.md
