@@ -2,12 +2,12 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json",
   "description": "MCP server for hybrid semantic + keyword search over the official Obsidian Developer Docs and User Help documentation.",
   "name": "io.github.sandovaldavid/obsidian-docs-mcp",
-  "version": "0.3.2-beta",
+  "version": "0.3.3-beta",
   "packages": [
     {
       "registryType": "nuget",
       "identifier": "obsidian-docs-mcp",
-      "version": "0.3.2-beta",
+      "version": "0.3.3-beta",
       "transport": {
         "type": "stdio"
       },
