@@ -1,0 +1,32 @@
+title: Obsidian Docs MCP
+description: >-
+  An MCP server that gives AI agents fast, token-efficient hybrid search
+  over the official Obsidian documentation.
+url: "https://sandovaldavid.github.io"
+baseurl: "/obsidian-docs-mcp"
+
+remote_theme: just-the-docs/just-the-docs
+color_scheme: obsidian_midnight
+
+search_enabled: true
+heading_anchors: true
+
+nav_external_links:
+  - title: GitHub repository
+    url: https://github.com/sandovaldavid/obsidian-docs-mcp
+    hide_icon: false
+  - title: NuGet package
+    url: https://www.nuget.org/packages/obsidian-docs-mcp
+
+back_to_top: true
+back_to_top_text: "Back to top"
+
+footer_content: "Copyright &copy; 2026 David Sandoval. Distributed under the MIT License."
+
+plugins:
+  - jekyll-remote-theme
+
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - vendor

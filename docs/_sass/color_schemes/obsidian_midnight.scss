@@ -1,0 +1,22 @@
+// Custom just-the-docs color scheme: midnight blue background with
+// Obsidian's signature purple as the accent color.
+// See: https://just-the-docs.com/docs/customization/#customizing-colors
+
+// Base surfaces — midnight/navy blue instead of the default dark grey.
+$body-background-color: #0b1120;
+$sidebar-color: #10162f;
+$search-background-color: #10162f;
+$table-background-color: #10162f;
+$code-background-color: #161b33;
+$feedback-color: #10162f;
+$border-color: #232946;
+
+// Text.
+$body-text-color: #cbd5e1;
+$body-heading-color: #e2e8f0;
+$link-color: #a78bfa;
+$nav-child-link-color: #cbd5e1;
+
+// Obsidian-purple accents on interactive elements.
+$btn-primary-color: #7c3aed;
+$base-button-color: #10162f;
