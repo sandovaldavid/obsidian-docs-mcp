@@ -80,11 +80,11 @@ jobs:
           branch="chore/sync-changelog-${{ github.run_id }}"
           git checkout -b "$branch"
           git add docs/changelog.md
-          git commit -m "docs: sync changelog page"
+          git commit -m "docs(changelog): sync changelog page"
           git push -u origin "$branch"
 
           gh pr create --repo ${{ github.repository }} --base main --head "$branch" \
-            --title "docs: sync changelog page" \
+            --title "docs(changelog): sync changelog page" \
             --body "Automated sync of docs/changelog.md from CHANGELOG.md after a release-please release. Merging this triggers the Pages deploy (docs.yml watches docs/** on main)."
 
   sync-develop:
