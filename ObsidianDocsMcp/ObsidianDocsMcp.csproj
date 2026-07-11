@@ -26,15 +26,16 @@
     <PackageTags>AI; MCP; server; stdio; obsidian</PackageTags>
     <Description>MCP server for .NET 10 that provides hybrid (semantic + keyword) search over the Obsidian documentation (Developer Docs and User Help).</Description>
     <Authors>David Sandoval</Authors>
-    <PackageProjectUrl>https://github.com/sandovaldavid/obsidian-docs-mcp</PackageProjectUrl>
+    <PackageProjectUrl>https://sandovaldavid.github.io/obsidian-docs-mcp/</PackageProjectUrl>
     <RepositoryUrl>https://github.com/sandovaldavid/obsidian-docs-mcp</RepositoryUrl>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
   </PropertyGroup>
 
   <!-- Include additional files for browsing the MCP server. -->
   <ItemGroup>
     <None Include=".mcp\server.json" Pack="true" PackagePath="/.mcp/"/>
     <None Include="README.md" Pack="true" PackagePath="/"/>
+    <None Include="..\LICENSE" Pack="true" PackagePath="/"/>
   </ItemGroup>
 
   <ItemGroup>
