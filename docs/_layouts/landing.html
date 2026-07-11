@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ page.title | default: site.title }}</title>
+  <meta name="description" content="{{ page.description | default: site.description }}">
+  {% include head_custom.html %}
+  <link rel="stylesheet" href="{{ '/assets/css/landing.css' | relative_url }}">
+</head>
+<body>
+  <nav class="nav">
+    <a class="brand" href="{{ '/' | relative_url }}">
+      <span class="mark"></span> Obsidian Docs MCP
+    </a>
+    <div class="navlinks">
+      <a href="{{ '/setup' | relative_url }}">Setup</a>
+      <a href="{{ '/architecture' | relative_url }}">Architecture</a>
+      <a href="{{ '/tools-reference' | relative_url }}">Tools</a>
+      <a href="https://github.com/sandovaldavid/obsidian-docs-mcp">GitHub</a>
+    </div>
+  </nav>
+
+  <header class="hero">
+    <span class="eyebrow">MCP SERVER &middot; .NET 10</span>
+    <h1>Give your AI agent<br>a photographic memory<br>of <span>Obsidian&rsquo;s docs</span></h1>
+    <p>Hybrid semantic + keyword search over the official Developer Docs and User Help,
+       indexed locally, answered in milliseconds &mdash; no more burning context on full markdown files.</p>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="{{ '/setup' | relative_url }}">Install in 30 seconds &rarr;</a>
+      <a class="btn btn-ghost" href="https://github.com/sandovaldavid/obsidian-docs-mcp">View on GitHub</a>
+    </div>
+
+    <div class="terminal" aria-hidden="true">
+      <div class="tbar"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+      <div class="tbody">
+        <div><span class="prompt">&#10095;</span> obsidian-docs-mcp search &quot;WorkspaceLeaf&quot;</div>
+        <div class="out">&nbsp;</div>
+        <div class="out">1. <span class="key">Views.md</span> &rsaquo; Registering a custom view&nbsp;&nbsp;score 0.94</div>
+        <div class="out">2. <span class="key">Workspace.md</span> &rsaquo; WorkspaceLeaf API&nbsp;&nbsp;score 0.89</div>
+        <div class="out">3. <span class="key">Plugin.md</span> &rsaquo; Opening leaves in panes&nbsp;&nbsp;score 0.76</div>
+      </div>
+    </div>
+  </header>
+
+  <section class="features">
+    <div class="feature">
+      <div class="fnum">01</div>
+      <h3>Hybrid search</h3>
+      <p>SQLite FTS5 keyword matching plus local Ollama embeddings, merged with Reciprocal Rank Fusion &mdash; exact API names and conceptual questions both land.</p>
+    </div>
+    <div class="feature">
+      <div class="fnum">02</div>
+      <h3>Zero clone</h3>
+      <p>Documentation is pulled as GitHub ZIPs directly into memory and cached to a local SQLite database &mdash; nothing to check out or maintain by hand.</p>
+    </div>
+    <div class="feature">
+      <div class="fnum">03</div>
+      <h3>Fully offline</h3>
+      <p>After the first index, every search runs locally in milliseconds. No network round-trip, no per-query API cost.</p>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="footer-links">
+      <a href="{{ '/faq' | relative_url }}">FAQ</a>
+      <a href="{{ '/contributing' | relative_url }}">Contributing</a>
+      <a href="{{ '/changelog' | relative_url }}">Changelog</a>
+      <a href="https://www.nuget.org/packages/obsidian-docs-mcp">NuGet</a>
+    </div>
+    <div class="footer-meta">
+      <a href="https://github.com/sandovaldavid/obsidian-docs-mcp/blob/main/LICENSE">MIT Licensed</a>
+      &middot; <a href="https://github.com/sandovaldavid/obsidian-docs-mcp">sandovaldavid/obsidian-docs-mcp</a>
+    </div>
+  </footer>
+</body>
+</html>

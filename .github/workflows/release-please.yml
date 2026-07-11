@@ -32,7 +32,7 @@ jobs:
         if: ${{ steps.release.outputs.release_created == 'true' }}
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh workflow run nuget-publish.yml --ref main -f tag=${{ steps.release.outputs.tag_name }}
+        run: gh workflow run nuget-publish.yml --repo ${{ github.repository }} --ref main -f tag=${{ steps.release.outputs.tag_name }}
 
   sync-changelog:
     needs: release-please
@@ -71,4 +71,56 @@ jobs:
       - name: Trigger Pages deploy
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh workflow run docs.yml --ref main
+        run: gh workflow run docs.yml --repo ${{ github.repository }} --ref main
+
+  sync-develop:
+    needs: release-please
+    if: ${{ needs.release-please.outputs.release_created == 'true' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout develop
+        uses: actions/checkout@v4
+        with:
+          ref: develop
+          fetch-depth: 0
+
+      - name: Configure git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      # Skip if develop already has every commit main does (e.g. nothing to sync yet).
+      - name: Check if a sync is needed
+        id: check
+        run: |
+          if git merge-base --is-ancestor origin/main HEAD; then
+            echo "needed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "needed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # A real merge commit (not squash/rebase) is required here so the commits stay
+      # recognizable as shared ancestry between main and develop — squashing/rebasing this
+      # rewrites SHAs and produces the "develop is N commits behind main" phantom divergence
+      # bug documented in the git-flow playbook.
+      - name: Merge main into a sync branch
+        if: steps.check.outputs.needed == 'true'
+        id: sync
+        run: |
+          branch="chore/sync-develop-${{ github.run_id }}"
+          git checkout -b "$branch"
+          git merge origin/main --no-edit -m "chore(repo): merge main into develop"
+          git push -u origin "$branch"
+          echo "branch=$branch" >> "$GITHUB_OUTPUT"
+
+      - name: Open sync PR
+        if: steps.check.outputs.needed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh pr create --repo ${{ github.repository }} --base develop --head "${{ steps.sync.outputs.branch }}" \
+            --title "chore(repo): merge main into develop" \
+            --body "Automated sync after a release-please release, so develop and main share the same commit history for the released version. Uses a merge commit intentionally — see CONTRIBUTING.md's branching model section for why. Merge with **Create a merge commit**, same as this PR was created with."
