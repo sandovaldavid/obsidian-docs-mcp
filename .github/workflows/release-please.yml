@@ -11,6 +11,10 @@ permissions:
 jobs:
   release-please:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      actions: write
     outputs:
       release_created: ${{ steps.release.outputs.release_created }}
     steps:
@@ -20,6 +24,15 @@ jobs:
         with:
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
+
+      # Same anti-recursion rule as the docs.yml trigger below: release-please-action creates
+      # the GitHub Release using the default GITHUB_TOKEN, so the `release: published` event it
+      # fires does NOT trigger nuget-publish.yml automatically. Trigger it explicitly instead.
+      - name: Trigger NuGet publish
+        if: ${{ steps.release.outputs.release_created == 'true' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run nuget-publish.yml --ref main -f tag=${{ steps.release.outputs.tag_name }}
 
   sync-changelog:
     needs: release-please

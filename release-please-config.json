@@ -6,6 +6,8 @@
       "release-type": "simple",
       "package-name": "obsidian-docs-mcp",
       "changelog-path": "CHANGELOG.md",
+      "include-component-in-tag": false,
+      "include-v-in-tag": true,
       "extra-files": [
         {
           "type": "xml",

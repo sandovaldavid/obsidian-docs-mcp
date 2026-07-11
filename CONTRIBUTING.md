@@ -58,8 +58,8 @@ ci(github): add dotnet format workflow
 
 - **`develop`** is the integration branch — target this with feature/fix branches.
 - **`main`** only receives merges from `develop` (or a hotfix branch) and is what release-please and the docs/NuGet publish pipelines watch. Pushing to `main` or `develop` directly is blocked; both only accept changes via pull request, and neither branch can be deleted.
-- PRs into **`develop`** merge via **squash** or **rebase** (no merge commits — keeps `develop`'s history linear).
-- PRs into **`main`** merge via **squash** or **merge commit** (no rebase — preserves the merge point from `develop`).
+- PRs into **`develop`** and **`main`** both merge via **squash** or **merge commit** (no rebase on either branch).
+- Use a **merge commit** specifically when syncing `main` back into `develop` after a release (e.g. via a `main` → `develop` PR) — squash rewrites commit SHAs, so git can no longer recognize the content as already merged, which makes `develop` permanently show as "behind" `main` even though nothing is missing. Regular feature/fix branches into either `develop` or `main` are fine with squash.
 - Every PR must pass the `build` (CI) and `dotnet-format` checks before it's mergeable.
 - Feature branches are auto-deleted after merge; `main`/`develop` never are.
 
