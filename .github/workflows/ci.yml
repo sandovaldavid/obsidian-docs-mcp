@@ -24,8 +24,12 @@ jobs:
       - name: Build
         run: dotnet build ObsidianDocsMcp/ObsidianDocsMcp.csproj --no-restore -c Release
 
+      # No --no-build here: a plain `dotnet build` on a multi-RuntimeIdentifiers project only
+      # produces publish output for the host RID, but packing this McpServer-type package
+      # publishes every RID — --no-build would make it look for intermediates that were never
+      # generated for the non-host RIDs and fail.
       - name: Pack
-        run: dotnet pack ObsidianDocsMcp/ObsidianDocsMcp.csproj --no-build -c Release -o ./artifacts
+        run: dotnet pack ObsidianDocsMcp/ObsidianDocsMcp.csproj --no-restore -c Release -o ./artifacts
 
       - name: Upload package artifact
         uses: actions/upload-artifact@v4
