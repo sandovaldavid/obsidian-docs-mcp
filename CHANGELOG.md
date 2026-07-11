@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.3.1-beta](https://github.com/sandovaldavid/obsidian-docs-mcp/compare/v0.3.0-beta...v0.3.1-beta) (2026-07-11)
+
+
+### Bug Fixes
+
+* **deps:** pin patched SQLitePCLRaw native library ([4f03a41](https://github.com/sandovaldavid/obsidian-docs-mcp/commit/4f03a4187b315fa94073f5aa04d68e606ec43403))
+* **docs:** fix code contrast and diagram overlap ([#28](https://github.com/sandovaldavid/obsidian-docs-mcp/issues/28)) ([1614980](https://github.com/sandovaldavid/obsidian-docs-mcp/commit/1614980cd6f99b2d877ba3acf38429d65d1a3047))
+* **github:** mark beta releases as GitHub prerelease ([#27](https://github.com/sandovaldavid/obsidian-docs-mcp/issues/27)) ([630b712](https://github.com/sandovaldavid/obsidian-docs-mcp/commit/630b712d04148c324a52380c7ef2c822929e33e4))
+
 ## [0.3.0-beta](https://github.com/sandovaldavid/obsidian-docs-mcp/compare/v0.2.0-beta...v0.3.0-beta) (2026-07-11)
 
 
