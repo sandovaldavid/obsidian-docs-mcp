@@ -15,11 +15,27 @@ The server is a .NET 10 [Generic Host](https://learn.microsoft.com/dotnet/core/e
 
 There are four moving pieces:
 
-```
-ObsidianIndexer  →  DatabaseService (SQLite)  →  OllamaEmbeddingService  →  ObsidianSearchTools (MCP tools)
+```mermaid
+flowchart LR
+    IDX["ObsidianIndexer"]
+    TOOLS["ObsidianSearchTools<br/>(MCP tools)"]
+    OLLAMA[("Ollama<br/>embeddings")]
+    DB[("SQLite<br/>DatabaseService")]
+
+    IDX -->|embed chunks| OLLAMA
+    IDX -->|store| DB
+    TOOLS -->|embed query| OLLAMA
+    TOOLS -->|search| DB
 ```
 
 ## Indexing pipeline (`ObsidianIndexer`)
+
+```mermaid
+flowchart LR
+    A["Fetch<br/>local dir or GitHub ZIP"] --> B["Segment<br/>Markdig AST by heading"]
+    B --> C["Embed<br/>Ollama, 4 concurrent"]
+    C --> D["Store<br/>atomic SQLite transaction"]
+```
 
 1. **Fetch**: for each documentation source (Developer Docs, User Help), the indexer first checks for a local directory override (`Docs:DeveloperDocsPath` / `Docs:UserHelpPath` in config). If not present, it downloads the corresponding GitHub repository as a ZIP archive directly into memory (`HttpClient` + `System.IO.Compression.ZipArchive`) — no disk clone required. Downloads are capped at 200MB total and 5MB per file to guard against a misconfigured URL or a decompression bomb.
 2. **Segment**: each Markdown file is parsed with [Markdig](https://github.com/xoofx/markdig) and split into logical chunks along heading boundaries (levels 1-4, both ATX `#`-style and setext `===`/`---`-style), with a safety split at ~2000 characters if a section runs long. Parsing the real AST (rather than a line-by-line scan) means headings inside fenced code blocks are correctly ignored. Each chunk gets a deterministic SHA-256 ID derived from its file path, index, and heading.
@@ -31,6 +47,15 @@ Only one reindex can run at a time — a `ReindexDocumentation` call while anoth
 ## Hybrid search (`ObsidianSearchTools.SearchDocumentation`)
 
 A single search call runs two independent retrieval strategies in parallel:
+
+```mermaid
+flowchart LR
+    Q(["Query"]) --> FTS["Keyword search<br/>SQLite FTS5 + bm25()"]
+    Q --> SEM["Semantic search<br/>Ollama embedding + cosine similarity"]
+    FTS --> RRF{"Reciprocal<br/>Rank Fusion"}
+    SEM --> RRF
+    RRF --> R(["Ranked results"])
+```
 
 - **Keyword search**: SQLite FTS5 `MATCH` query, ranked by the native `bm25()` function, converted to a 0–1 score via a sigmoid transform.
 - **Semantic search**: the query text is embedded via Ollama, then compared against every stored chunk embedding using cosine similarity. Scores are streamed into a bounded top-K min-heap sized to the requested `limit` as rows come off the database reader, rather than loading the full corpus into memory and sorting it — still a brute-force scan (no ANN index), but without the extra full-materialization and full-sort cost.

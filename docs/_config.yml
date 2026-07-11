@@ -11,6 +11,9 @@ color_scheme: obsidian_midnight
 search_enabled: true
 heading_anchors: true
 
+mermaid:
+  version: "10.9.1"
+
 nav_external_links:
   - title: GitHub repository
     url: https://github.com/sandovaldavid/obsidian-docs-mcp
