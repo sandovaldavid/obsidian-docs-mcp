@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="ObsidianDocsMcp.Eval/ObsidianDocsMcp.Eval.csproj" />
+  <Project Path="ObsidianDocsMcp.Tests/ObsidianDocsMcp.Tests.csproj" />
+  <Project Path="ObsidianDocsMcp/ObsidianDocsMcp.csproj" />
+</Solution>
