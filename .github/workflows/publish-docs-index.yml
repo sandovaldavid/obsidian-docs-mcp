@@ -1,0 +1,73 @@
+name: Publish Prebuilt Docs Index
+
+# Regenerates the SQLite index (Markdown chunks + Ollama embeddings) and publishes it as an
+# asset on the fixed `docs-index` release tag, so a fresh install can download it instead of
+# paying for a live reindex on first run. This tag is dedicated to the prebuilt index and is
+# intentionally kept separate from this repo's normal vX.Y.Z-beta software releases (see
+# release-please.yml) so publishing a new app version never shadows or is shadowed by it.
+
+on:
+  schedule:
+    - cron: '0 3 * * 1' # Weekly, Monday 03:00 UTC
+  workflow_dispatch:
+    inputs:
+      user_help_folders:
+        description: 'Comma-separated top-level User Help folders to index (blank = all languages)'
+        required: false
+        default: 'en,es,Sandbox'
+      developer_docs_folders:
+        description: 'Comma-separated top-level Developer Docs folders to index (blank = everything)'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-publish-index:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Install Ollama
+        run: curl -fsSL https://ollama.com/install.sh | sh
+
+      - name: Pull embedding model
+        run: ollama pull nomic-embed-text
+
+      - name: Build (Release)
+        run: dotnet build ObsidianDocsMcp/ObsidianDocsMcp.csproj -c Release
+
+      - name: Run indexer
+        env:
+          Database__Path: ${{ github.workspace }}/obsidian_docs.db
+          USER_HELP_FOLDERS: ${{ github.event.inputs.user_help_folders || 'en,es,Sandbox' }}
+          DEV_DOCS_FOLDERS: ${{ github.event.inputs.developer_docs_folders }}
+        run: |
+          dotnet ObsidianDocsMcp/bin/Release/net10.0/linux-x64/ObsidianDocsMcp.dll \
+            index "$USER_HELP_FOLDERS" "$DEV_DOCS_FOLDERS"
+
+      - name: Verify the index is non-empty
+        env:
+          Database__Path: ${{ github.workspace }}/obsidian_docs.db
+        run: |
+          status=$(dotnet ObsidianDocsMcp/bin/Release/net10.0/linux-x64/ObsidianDocsMcp.dll index-status)
+          echo "$status"
+          echo "$status" | grep -qE '[1-9][0-9]* documentation sections' || { echo "Index is empty, failing."; exit 1; }
+
+      - name: Publish to the docs-index release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view docs-index >/dev/null 2>&1 || \
+            gh release create docs-index \
+              --title "Prebuilt documentation index" \
+              --notes "Automated, regenerated periodically by this workflow. Not a software release — see the vX.Y.Z-beta releases for those." \
+              --latest=false
+          gh release upload docs-index obsidian_docs.db --clobber

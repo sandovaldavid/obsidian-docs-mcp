@@ -78,7 +78,9 @@ public class ObsidianSearchTools
     }
 
     [McpServerTool, Description("Starts a reindex process that reads all Markdown files, generates their embeddings via Ollama, and stores them in SQLite.")]
-    public Task<string> ReindexDocumentation()
+    public Task<string> ReindexDocumentation(
+        [Description("Comma-separated top-level User Help folders to index, e.g. 'en,es,Sandbox'. Omit to index every language (default).")] string? userHelpFolders = null,
+        [Description("Comma-separated top-level Developer Docs folders to index. Omit to index everything (default).")] string? developerDocsFolders = null)
     {
         _logger.LogInformation("MCP Tool called: ReindexDocumentation");
 
@@ -94,7 +96,7 @@ public class ObsidianSearchTools
         {
             try
             {
-                await _indexer.IndexAllDocsAsync();
+                await _indexer.IndexAllDocsAsync(userHelpFolders, developerDocsFolders);
             }
             catch (Exception ex)
             {
