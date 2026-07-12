@@ -134,6 +134,16 @@ public class ObsidianIndexer
             }
             File.Move(tempPath, _dbService.DbPath, overwrite: true);
 
+            // InitializeDatabaseAsync (called at startup, before this) already opened the
+            // pre-existing empty-schema database in WAL mode, which can leave stale -wal/-shm
+            // sidecar files next to it. Since we just replaced the main file wholesale rather
+            // than through a SQLite connection, those sidecars still describe the old (empty)
+            // database's pages — left in place, SQLite would replay them against the new file
+            // and silently hide the just-downloaded data. Delete them so the next connection
+            // opens the new file cleanly with nothing to replay.
+            File.Delete(_dbService.DbPath + "-wal");
+            File.Delete(_dbService.DbPath + "-shm");
+
             _logger.LogInformation("Prebuilt documentation index downloaded successfully.");
             return true;
         }
