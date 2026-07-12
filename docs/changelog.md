@@ -5,6 +5,18 @@ nav_order: 7
 
 # Changelog
 
+## [0.4.0](https://github.com/sandovaldavid/obsidian-docs-mcp/compare/v0.3.3-beta...v0.4.0) (2026-07-12)
+
+
+### Features
+
+* **indexer:** configurable folder filtering, prebuilt index, and match percentage ([#48](https://github.com/sandovaldavid/obsidian-docs-mcp/issues/48)) ([3fbc121](https://github.com/sandovaldavid/obsidian-docs-mcp/commit/3fbc121be57d0b152c05c990d8881a38c4280b73))
+
+
+### Bug Fixes
+
+* **server:** fix nuget project url and license ([#47](https://github.com/sandovaldavid/obsidian-docs-mcp/issues/47)) ([542729b](https://github.com/sandovaldavid/obsidian-docs-mcp/commit/542729ba55ae32bb51f7857dec6fc9706c1bfcc3))
+
 ## [0.3.3-beta](https://github.com/sandovaldavid/obsidian-docs-mcp/compare/v0.3.2-beta...v0.3.3-beta) (2026-07-11)
 
 
