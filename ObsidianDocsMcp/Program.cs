@@ -22,6 +22,7 @@ builder.Services.AddHttpClient(); // HttpClient for ZIP downloads
 builder.Services.AddHttpClient<IEmbeddingService, OllamaEmbeddingService>();
 builder.Services.AddSingleton<IDatabaseService, DatabaseService>();
 builder.Services.AddSingleton<ObsidianIndexer>();
+builder.Services.AddTransient<SearchService>();
 
 // Register the tools class in DI so the MCP SDK can instantiate it with its dependencies.
 builder.Services.AddTransient<ObsidianSearchTools>();

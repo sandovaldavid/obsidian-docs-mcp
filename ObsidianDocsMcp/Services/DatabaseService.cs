@@ -245,7 +245,7 @@ public class DatabaseService : IDatabaseService
             var embedding = new float[bytes.Length / sizeof(float)];
             Buffer.BlockCopy(bytes, 0, embedding, 0, bytes.Length);
 
-            double similarity = CosineSimilarity(queryVector, embedding);
+            double similarity = VectorMath.CosineSimilarity(queryVector, embedding);
 
             var result = new SearchResult
             {
@@ -287,31 +287,5 @@ public class DatabaseService : IDatabaseService
         countCmd.CommandText = "SELECT COUNT(*) FROM Chunks;";
         var count = await countCmd.ExecuteScalarAsync();
         return count != null ? Convert.ToInt32(count) : 0;
-    }
-
-    private static double CosineSimilarity(float[] vectorA, float[] vectorB)
-    {
-        if (vectorA.Length != vectorB.Length)
-        {
-            return 0.0;
-        }
-
-        double dotProduct = 0.0;
-        double normA = 0.0;
-        double normB = 0.0;
-
-        for (int i = 0; i < vectorA.Length; i++)
-        {
-            dotProduct += vectorA[i] * vectorB[i];
-            normA += vectorA[i] * vectorA[i];
-            normB += vectorB[i] * vectorB[i];
-        }
-
-        if (normA == 0.0 || normB == 0.0)
-        {
-            return 0.0;
-        }
-
-        return dotProduct / (Math.Sqrt(normA) * Math.Sqrt(normB));
     }
 }
