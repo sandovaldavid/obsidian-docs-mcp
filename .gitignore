@@ -10,6 +10,9 @@ artifacts/
 *.db-shm
 *.db-wal
 
+# Retrieval-eval run reports (only eval/baseline.json is committed)
+eval/results/
+
 # Local/dev-only MCP configs (machine-specific absolute paths)
 mcp-config.json
 .mcp.json
