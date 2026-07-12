@@ -5,6 +5,13 @@ nav_order: 7
 
 # Changelog
 
+## [0.4.1](https://github.com/sandovaldavid/obsidian-docs-mcp/compare/v0.4.0...v0.4.1) (2026-07-12)
+
+
+### Bug Fixes
+
+* **indexer:** delete stale wal/shm after prebuilt download ([#65](https://github.com/sandovaldavid/obsidian-docs-mcp/issues/65)) ([4494feb](https://github.com/sandovaldavid/obsidian-docs-mcp/commit/4494febc0534d2b66358c2010040138138c839c7))
+
 ## [0.4.0](https://github.com/sandovaldavid/obsidian-docs-mcp/compare/v0.3.3-beta...v0.4.0) (2026-07-12)
 
 
