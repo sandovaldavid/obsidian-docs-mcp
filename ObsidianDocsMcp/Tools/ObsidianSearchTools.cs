@@ -78,7 +78,9 @@ public class ObsidianSearchTools
     }
 
     [McpServerTool, Description("Starts a reindex process that reads all Markdown files, generates their embeddings via Ollama, and stores them in SQLite.")]
-    public Task<string> ReindexDocumentation()
+    public Task<string> ReindexDocumentation(
+        [Description("Comma-separated top-level User Help folders to index, e.g. 'en,es,Sandbox'. Omit to index every language (default).")] string? userHelpFolders = null,
+        [Description("Comma-separated top-level Developer Docs folders to index. Omit to index everything (default).")] string? developerDocsFolders = null)
     {
         _logger.LogInformation("MCP Tool called: ReindexDocumentation");
 
@@ -94,7 +96,7 @@ public class ObsidianSearchTools
         {
             try
             {
-                await _indexer.IndexAllDocsAsync();
+                await _indexer.IndexAllDocsAsync(userHelpFolders, developerDocsFolders);
             }
             catch (Exception ex)
             {
@@ -136,14 +138,19 @@ public class ObsidianSearchTools
     }
 
     /// <summary>
-    /// Merges two result lists using Reciprocal Rank Fusion (RRF).
+    /// Merges two result lists using Reciprocal Rank Fusion (RRF). RRF only decides the merged
+    /// *order* — it's not returned to callers, since its magnitude (~1/k) isn't a meaningful
+    /// relevance measure on its own. The returned <see cref="SearchResult.MatchPercent"/> is the
+    /// best of the underlying cosine-similarity/BM25-derived percentages instead, so callers get
+    /// an interpretable 0-100 match quality regardless of which method(s) found the result.
     /// </summary>
     private List<SearchResult> ReciprocalRankFusion(List<SearchResult> vectorList, List<SearchResult> ftsList, int limit)
     {
         const double k = 60.0; // Standard RRF smoothing constant
-        var rrfScores = new Dictionary<string, (SearchResult Doc, double Score)>();
+        var rrfScores = new Dictionary<string, (SearchResult Doc, double RrfScore, double BestMatchPercent)>();
 
-        // Computes and accumulates RRF scores for a result list.
+        // Computes and accumulates RRF scores for a result list, tracking the best original
+        // match percentage seen for each fragment across both lists.
         void ApplyRrf(List<SearchResult> docList)
         {
             for (int rank = 0; rank < docList.Count; rank++)
@@ -155,11 +162,11 @@ public class ObsidianSearchTools
 
                 if (rrfScores.TryGetValue(key, out var entry))
                 {
-                    rrfScores[key] = (entry.Doc, entry.Score + rrfContribution);
+                    rrfScores[key] = (entry.Doc, entry.RrfScore + rrfContribution, Math.Max(entry.BestMatchPercent, doc.MatchPercent));
                 }
                 else
                 {
-                    rrfScores[key] = (doc, rrfContribution);
+                    rrfScores[key] = (doc, rrfContribution, doc.MatchPercent);
                 }
             }
         }
@@ -167,13 +174,13 @@ public class ObsidianSearchTools
         ApplyRrf(vectorList);
         ApplyRrf(ftsList);
 
-        // Sort by descending RRF score and take the limit.
+        // Sort by descending RRF score (internal ranking only) and take the limit.
         var finalResults = rrfScores.Values
-            .OrderByDescending(x => x.Score)
+            .OrderByDescending(x => x.RrfScore)
             .Select(x =>
             {
                 var doc = x.Doc;
-                doc.Score = x.Score; // Store the final RRF score
+                doc.MatchPercent = Math.Round(x.BestMatchPercent, 1);
                 doc.SourceType = "Hybrid";
                 return doc;
             })

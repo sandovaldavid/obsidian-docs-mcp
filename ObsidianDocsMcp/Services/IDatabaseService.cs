@@ -6,6 +6,9 @@ namespace ObsidianDocsMcp.Services;
 
 public interface IDatabaseService
 {
+    /// <summary>Resolved absolute path to the SQLite database file backing the index.</summary>
+    string DbPath { get; }
+
     Task InitializeDatabaseAsync();
     Task SaveChunksAsync(List<SectionChunk> chunks);
     Task<List<SearchResult>> FtsSearchAsync(string queryText, int limit);
