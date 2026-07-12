@@ -23,6 +23,8 @@ The goal is to give your AI agent the most concise, accurate answer possible, dr
 - **Persistent Offline SQLite Cache**: documentation is downloaded and processed once. Day-to-day searches run locally in milliseconds, with zero network latency.
 - **Direct Dynamic Download**: no need to clone the official repos to disk. The indexer dynamically downloads ZIPs in memory from GitHub and segments them by logical headings (`#`, `##`, `###`).
 - **Local Ollama**: uses Ollama's `nomic-embed-text` model on your own machine to generate embeddings, guaranteeing full privacy and zero cost.
+- **Fast First Run**: on a fresh install, the server automatically downloads a periodically-regenerated prebuilt index instead of embedding everything locally, so search works within seconds — falls back to a live reindex only if that's unavailable.
+- **Configurable Folder Filtering**: restrict indexing to specific top-level folders per source (e.g. `en,es,Sandbox` for User Help instead of all 32 language folders) to cut indexing time and chunk count.
 
 ---
 
@@ -120,13 +122,18 @@ Any client that supports the [MCP registry](https://modelcontextprotocol.io/) ca
 
 Since the documentation cache is local and persistent (`obsidian_docs.db`), when you want to update the documentation with the latest releases from the GitHub repositories, simply trigger a reindex.
 
+On the very first run, if the index is empty, the server does this automatically: it downloads a periodically-regenerated prebuilt index (fast, no local embedding compute) and only falls back to a live reindex if that's unavailable. You don't have to do anything for a fresh install to work — the commands below are for forcing a fresh reindex or restricting it to specific folders.
+
 ### From the console:
 ```bash
-obsidian-docs-mcp index
+obsidian-docs-mcp index                     # reindex everything (default)
+obsidian-docs-mcp index en,es,Sandbox       # restrict User Help to these top-level folders
+obsidian-docs-mcp index en,es,Sandbox en    # also restrict Developer Docs
+obsidian-docs-mcp index-status              # check chunk count / reindex progress / last error
 ```
 
 ### From the agent (MCP tool):
-Any MCP client can tell the agent to run the `ReindexDocumentation` tool. This runs the download and vectorization process asynchronously in the background so it doesn't interrupt your chat session.
+Any MCP client can tell the agent to run the `ReindexDocumentation` tool, optionally passing `userHelpFolders`/`developerDocsFolders` the same way as the CLI arguments above. This runs the download and vectorization process asynchronously in the background so it doesn't interrupt your chat session.
 
 ---
 

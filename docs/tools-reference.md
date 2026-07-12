@@ -25,13 +25,18 @@ Hybrid (semantic + keyword) search over the indexed Obsidian documentation. Retu
 - For conceptual questions, natural language works well and can be asked in any language — the embedding model resolves the conceptual match across languages.
 - Keep `limit` low (default `3`) to avoid flooding the context window; increase only if the first pass doesn't surface what you need.
 
-**Returns:** a JSON array of result objects with `Title`, `Header`, `Content`, `FilePath`, `Score`, and `SourceType` (`"Hybrid"`).
+**Returns:** a JSON array of result objects with `Title`, `Header`, `Content`, `FilePath`, `MatchPercent`, and `SourceType` (`"Hybrid"`). `MatchPercent` is a 0-100 match quality score (the best of the underlying cosine-similarity/BM25-derived percentages) — not the internal Reciprocal Rank Fusion value used only to order results.
 
 ## `ReindexDocumentation`
 
 Triggers an asynchronous reindex: downloads the latest documentation from the official GitHub repositories, regenerates embeddings via Ollama, and rebuilds the SQLite index. Runs in the background so it doesn't block the current session — expect it to take a few minutes depending on your machine and Ollama's throughput. If a reindex is already in progress, calling this again returns immediately with a message instead of starting a second overlapping run.
 
-No parameters. Call this when you suspect the local documentation is stale or missing methods from a recent Obsidian release.
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `userHelpFolders` | string? | *(none — indexes everything)* | Comma-separated top-level User Help folders to restrict indexing to, e.g. `"en,es,Sandbox"` instead of all 32 language folders. |
+| `developerDocsFolders` | string? | *(none — indexes everything)* | Same as `userHelpFolders`, but for Developer Docs. |
+
+Call this when you suspect the local documentation is stale or missing methods from a recent Obsidian release, or when you want to narrow the index to specific languages/folders. Note: the server also does this automatically on first run when the index is empty — see [Setup](setup.md#initial-indexing) — so you typically only need to call this manually to force a refresh or apply a custom folder filter.
 
 ## `IndexStatus`
 
