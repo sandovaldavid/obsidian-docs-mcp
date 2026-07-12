@@ -38,6 +38,19 @@ jobs:
       - name: Install Ollama
         run: curl -fsSL https://ollama.com/install.sh | sh
 
+      # The installer sets up a systemd service, but it isn't guaranteed to be up yet by the
+      # time the next step runs — start it explicitly and wait until it actually responds.
+      - name: Start Ollama server
+        run: |
+          ollama serve > /tmp/ollama-serve.log 2>&1 &
+          for i in $(seq 1 30); do
+            curl -s http://localhost:11434/api/tags > /dev/null 2>&1 && exit 0
+            sleep 1
+          done
+          echo "Ollama server did not become ready in time:"
+          cat /tmp/ollama-serve.log
+          exit 1
+
       - name: Pull embedding model
         run: ollama pull nomic-embed-text
 
@@ -68,6 +81,6 @@ jobs:
           gh release view docs-index >/dev/null 2>&1 || \
             gh release create docs-index \
               --title "Prebuilt documentation index" \
-              --notes "Automated, regenerated periodically by this workflow. Not a software release — see the vX.Y.Z-beta releases for those." \
+              --notes "Automated, regenerated periodically by this workflow. Not a software release — see the vX.Y.Z releases for those." \
               --latest=false
           gh release upload docs-index obsidian_docs.db --clobber
