@@ -58,8 +58,13 @@ if (args.Length > 0)
     if (args[0] == "index")
     {
         var indexer = scope.ServiceProvider.GetRequiredService<ObsidianIndexer>();
+        // Optional positional args: `index [userHelpFolders] [developerDocsFolders]`,
+        // e.g. `index en,es,Sandbox` to restrict User Help to those top-level folders.
+        // Omitted (or run with no args at all) indexes everything, unchanged from before.
+        string? userHelpFolders = args.Length > 1 ? args[1] : null;
+        string? developerDocsFolders = args.Length > 2 ? args[2] : null;
         logger.LogInformation("Starting manual CLI indexation...");
-        await indexer.IndexAllDocsAsync();
+        await indexer.IndexAllDocsAsync(userHelpFolders, developerDocsFolders);
         logger.LogInformation("CLI indexation complete. Exiting.");
         return;
     }
@@ -141,6 +146,38 @@ if (args.Length > 0)
         Console.WriteLine(results);
         Console.WriteLine("======================\n");
         return;
+    }
+    else if (args[0] == "index-status")
+    {
+        var searchTools = scope.ServiceProvider.GetRequiredService<ObsidianSearchTools>();
+        var status = await searchTools.IndexStatus();
+        Console.WriteLine("\n=== Index Status ===");
+        Console.WriteLine(status);
+        Console.WriteLine("=====================\n");
+        return;
+    }
+}
+
+// If the index is empty (first run / fresh install), try the prebuilt index first (fast download,
+// no local embedding compute) and only fall back to a live background reindex if that's
+// unavailable, so the MCP server doesn't sit idle returning "no results" in the meantime.
+using (var scope = host.Services.CreateScope())
+{
+    var dbService = scope.ServiceProvider.GetRequiredService<IDatabaseService>();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    if (await dbService.GetTotalChunksCountAsync() == 0)
+    {
+        var indexer = scope.ServiceProvider.GetRequiredService<ObsidianIndexer>();
+        if (await indexer.TryDownloadPrebuiltIndexAsync())
+        {
+            logger.LogInformation("Downloaded prebuilt documentation index.");
+        }
+        else
+        {
+            logger.LogInformation("No prebuilt index available — triggering automatic first-time indexation in the background.");
+            var searchTools = scope.ServiceProvider.GetRequiredService<ObsidianSearchTools>();
+            logger.LogInformation("{Result}", await searchTools.ReindexDocumentation());
+        }
     }
 }
 

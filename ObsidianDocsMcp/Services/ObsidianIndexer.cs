@@ -30,6 +30,10 @@ public class ObsidianIndexer
     private readonly string _userHelpPath;
     private readonly string _developerDocsZipUrl;
     private readonly string _userHelpZipUrl;
+    private readonly HashSet<string> _developerDocsIncludeFolders;
+    private readonly HashSet<string> _userHelpIncludeFolders;
+    private readonly bool _usePrebuiltIndex;
+    private readonly string _prebuiltIndexUrl;
 
     // Guards against overlapping reindex runs (ObsidianIndexer is a singleton, so this state
     // persists across MCP tool calls) and surfaces background-task outcomes to IndexStatus,
@@ -58,7 +62,26 @@ public class ObsidianIndexer
         // Default GitHub ZIP download URLs
         _developerDocsZipUrl = configuration["Docs:DeveloperDocsZipUrl"] ?? "https://github.com/obsidianmd/obsidian-developer-docs/archive/refs/heads/main.zip";
         _userHelpZipUrl = configuration["Docs:UserHelpZipUrl"] ?? "https://github.com/obsidianmd/obsidian-help/archive/refs/heads/master.zip";
+
+        // Optional persistent top-level folder restriction (e.g. "en,es,Sandbox"). Empty means
+        // no restriction — every top-level folder is indexed, which is the default behavior.
+        _developerDocsIncludeFolders = ParseFolderList(configuration["Docs:DeveloperDocsIncludeFolders"]);
+        _userHelpIncludeFolders = ParseFolderList(configuration["Docs:UserHelpIncludeFolders"]);
+
+        // Prebuilt index: a periodically-regenerated SQLite DB (with embeddings already computed)
+        // published to a fixed, dedicated release tag — distinct from this repo's normal vX.Y.Z-beta
+        // software releases — so first-run users don't have to wait for a live reindex.
+        _usePrebuiltIndex = !bool.TryParse(configuration["Docs:UsePrebuiltIndex"], out var usePrebuilt) || usePrebuilt;
+        var configuredPrebuiltIndexUrl = configuration["Docs:PrebuiltIndexUrl"];
+        _prebuiltIndexUrl = string.IsNullOrEmpty(configuredPrebuiltIndexUrl)
+            ? "https://github.com/sandovaldavid/obsidian-docs-mcp/releases/download/docs-index/obsidian_docs.db"
+            : configuredPrebuiltIndexUrl;
     }
+
+    private static HashSet<string> ParseFolderList(string? raw) =>
+        new(
+            (raw ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries),
+            StringComparer.OrdinalIgnoreCase);
 
     /// <summary>
     /// Attempts to acquire the reindex lock without blocking. Callers must call
@@ -68,7 +91,70 @@ public class ObsidianIndexer
 
     public void EndReindex() => _reindexGate.Release();
 
-    public async Task IndexAllDocsAsync()
+    /// <summary>
+    /// Downloads the periodically-regenerated prebuilt index (SQLite DB with embeddings already
+    /// computed) from its fixed release URL and writes it to the configured DB path, so a fresh
+    /// install doesn't have to pay for a live reindex. Returns false (without throwing) if
+    /// disabled via config, or on any download/write failure — callers should fall back to a
+    /// live reindex in that case.
+    /// </summary>
+    public async Task<bool> TryDownloadPrebuiltIndexAsync()
+    {
+        if (!_usePrebuiltIndex)
+        {
+            return false;
+        }
+
+        try
+        {
+            _logger.LogInformation("Downloading prebuilt documentation index from {Url}...", _prebuiltIndexUrl);
+            _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("ObsidianDocsMcp-Client");
+
+            using var downloadCts = new CancellationTokenSource(TimeSpan.FromMinutes(5));
+            using var response = await _httpClient.GetAsync(_prebuiltIndexUrl, HttpCompletionOption.ResponseHeadersRead, downloadCts.Token);
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogInformation("No prebuilt index available (HTTP {Status}).", (int)response.StatusCode);
+                return false;
+            }
+
+            var contentLength = response.Content.Headers.ContentLength;
+            if (contentLength.HasValue && contentLength.Value > MaxZipDownloadBytes)
+            {
+                _logger.LogWarning("Refusing to download prebuilt index: reported size {Size} bytes exceeds the {Max} byte limit.", contentLength.Value, MaxZipDownloadBytes);
+                return false;
+            }
+
+            // Download to a temp file first so a failure/timeout partway through never leaves a
+            // truncated database at the real path.
+            var tempPath = _dbService.DbPath + ".download";
+            await using (var fileStream = File.Create(tempPath))
+            {
+                await response.Content.CopyToAsync(fileStream, downloadCts.Token);
+            }
+            File.Move(tempPath, _dbService.DbPath, overwrite: true);
+
+            _logger.LogInformation("Prebuilt documentation index downloaded successfully.");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Could not download the prebuilt index. Falling back to live indexing.");
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Indexes all documentation sources.
+    /// </summary>
+    /// <param name="userHelpFolders">
+    /// Optional comma-separated list of top-level User Help folders to restrict indexing to
+    /// (e.g. "en,es,Sandbox"), overriding the persistent <c>Docs:UserHelpIncludeFolders</c>
+    /// config for this run only. Null falls back to that config; both null/empty mean "index
+    /// every folder" (the default).
+    /// </param>
+    /// <param name="developerDocsFolders">Same as <paramref name="userHelpFolders"/>, but for Developer Docs.</param>
+    public async Task IndexAllDocsAsync(string? userHelpFolders = null, string? developerDocsFolders = null)
     {
         LastReindexError = null;
 
@@ -77,30 +163,33 @@ public class ObsidianIndexer
             _logger.LogInformation("Starting documentation indexation process...");
             await _dbService.InitializeDatabaseAsync();
 
+            var developerDocsIncludeFolders = developerDocsFolders != null ? ParseFolderList(developerDocsFolders) : _developerDocsIncludeFolders;
+            var userHelpIncludeFolders = userHelpFolders != null ? ParseFolderList(userHelpFolders) : _userHelpIncludeFolders;
+
             var chunks = new List<SectionChunk>();
 
             // 1. Process Developer Docs (local or GitHub)
             if (Directory.Exists(_developerDocsPath))
             {
                 _logger.LogInformation("Processing developer docs locally at: {Path}", Path.GetFullPath(_developerDocsPath));
-                await ProcessLocalDirectoryAsync(_developerDocsPath, "Developer Docs", chunks);
+                await ProcessLocalDirectoryAsync(_developerDocsPath, "Developer Docs", chunks, developerDocsIncludeFolders);
             }
             else
             {
                 _logger.LogInformation("Developer docs local path does not exist. Fetching from GitHub ZIP: {Url}", _developerDocsZipUrl);
-                await ProcessGithubZipAsync(_developerDocsZipUrl, "Developer Docs", chunks);
+                await ProcessGithubZipAsync(_developerDocsZipUrl, "Developer Docs", chunks, developerDocsIncludeFolders);
             }
 
             // 2. Process User Help (local or GitHub)
             if (Directory.Exists(_userHelpPath))
             {
                 _logger.LogInformation("Processing user help docs locally at: {Path}", Path.GetFullPath(_userHelpPath));
-                await ProcessLocalDirectoryAsync(_userHelpPath, "User Help", chunks);
+                await ProcessLocalDirectoryAsync(_userHelpPath, "User Help", chunks, userHelpIncludeFolders);
             }
             else
             {
                 _logger.LogInformation("User help docs local path does not exist. Fetching from GitHub ZIP: {Url}", _userHelpZipUrl);
-                await ProcessGithubZipAsync(_userHelpZipUrl, "User Help", chunks);
+                await ProcessGithubZipAsync(_userHelpZipUrl, "User Help", chunks, userHelpIncludeFolders);
             }
 
             if (chunks.Count == 0)
@@ -109,7 +198,7 @@ public class ObsidianIndexer
                 return;
             }
 
-            _logger.LogInformation("Found {Count} chunks. Generating embeddings via Ollama (concurrency={Concurrency})...", chunks.Count, EmbeddingConcurrency);
+            _logger.LogInformation("Found {Count} chunks. Generating embeddings via Ollama (concurrency={Concurrency})... The first few requests may be slower while Ollama loads the embedding model into memory.", chunks.Count, EmbeddingConcurrency);
 
             int successCount = 0;
             int processedCount = 0;
@@ -152,26 +241,54 @@ public class ObsidianIndexer
         }
     }
 
-    private async Task ProcessLocalDirectoryAsync(string directoryPath, string docSourceType, List<SectionChunk> accumulatedChunks)
+    private async Task ProcessLocalDirectoryAsync(string directoryPath, string docSourceType, List<SectionChunk> accumulatedChunks, IReadOnlySet<string> includeFolders)
     {
-        var mdFiles = Directory.GetFiles(directoryPath, "*.md", SearchOption.AllDirectories);
+        var mdFiles = Directory.GetFiles(directoryPath, "*.md", SearchOption.AllDirectories)
+            .Where(f => !f.Contains("/.obsidian/") && !f.Contains("\\.obsidian\\") && !f.Contains(".git"))
+            .ToList();
+
+        int matchedCount = 0;
         foreach (var file in mdFiles)
         {
-            if (file.Contains("/.obsidian/") || file.Contains("\\.obsidian\\") || file.Contains(".git"))
+            var relativePath = Path.GetRelativePath(directoryPath, file);
+
+            if (includeFolders.Count > 0 && !includeFolders.Contains(TopLevelFolder(relativePath)))
             {
                 continue;
             }
 
-            var relativePath = Path.GetRelativePath(directoryPath, file);
             var title = Path.GetFileNameWithoutExtension(file);
             var fileContent = await File.ReadAllTextAsync(file);
 
             var fileChunks = SegmentMarkdown(fileContent, relativePath, title, docSourceType);
             accumulatedChunks.AddRange(fileChunks);
+            matchedCount++;
+        }
+
+        LogFolderFilterSummary(docSourceType, matchedCount, mdFiles.Count, includeFolders);
+    }
+
+    /// <summary>Top-level path segment used to match a file against an include-folder filter.</summary>
+    private static string TopLevelFolder(string relativePath)
+    {
+        var normalized = relativePath.Replace('\\', '/');
+        var firstSlashIdx = normalized.IndexOf('/');
+        return firstSlashIdx == -1 ? normalized : normalized[..firstSlashIdx];
+    }
+
+    private void LogFolderFilterSummary(string docSourceType, int matched, int total, IReadOnlySet<string> includeFolders)
+    {
+        if (includeFolders.Count == 0)
+        {
+            _logger.LogInformation("{Source}: no folder filter applied, kept all {Total} files.", docSourceType, total);
+        }
+        else
+        {
+            _logger.LogInformation("{Source}: kept {Matched}/{Total} files (folders: {Folders}).", docSourceType, matched, total, string.Join(", ", includeFolders));
         }
     }
 
-    private async Task ProcessGithubZipAsync(string zipUrl, string docSourceType, List<SectionChunk> accumulatedChunks)
+    private async Task ProcessGithubZipAsync(string zipUrl, string docSourceType, List<SectionChunk> accumulatedChunks, IReadOnlySet<string> includeFolders)
     {
         try
         {
@@ -179,7 +296,11 @@ public class ObsidianIndexer
             // Set the User-Agent header required by the GitHub API
             _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("ObsidianDocsMcp-Client");
 
-            using var response = await _httpClient.GetAsync(zipUrl, HttpCompletionOption.ResponseHeadersRead);
+            // HttpClient.Timeout only bounds the wait for response headers when using
+            // ResponseHeadersRead; the body read below has no built-in limit otherwise, so a
+            // stalled/throttled connection can hang this call forever with near-zero CPU usage.
+            using var downloadCts = new CancellationTokenSource(TimeSpan.FromMinutes(5));
+            using var response = await _httpClient.GetAsync(zipUrl, HttpCompletionOption.ResponseHeadersRead, downloadCts.Token);
             response.EnsureSuccessStatusCode();
 
             var contentLength = response.Content.Headers.ContentLength;
@@ -189,11 +310,14 @@ public class ObsidianIndexer
                 return;
             }
 
-            using var zipStream = await response.Content.ReadAsStreamAsync();
-            using var archive = new ZipArchive(zipStream);
+            using var zipBuffer = new MemoryStream();
+            await response.Content.CopyToAsync(zipBuffer, downloadCts.Token);
+            zipBuffer.Position = 0;
+            using var archive = new ZipArchive(zipBuffer);
 
             _logger.LogInformation("Parsing ZIP archive in memory...");
-            int fileCount = 0;
+            int totalCount = 0;
+            int matchedCount = 0;
 
             foreach (var entry in archive.Entries)
             {
@@ -202,6 +326,8 @@ public class ObsidianIndexer
                     !entry.FullName.Contains("/.obsidian/") &&
                     !entry.FullName.Contains("/.github/"))
                 {
+                    totalCount++;
+
                     if (entry.Length > MaxZipEntryBytes)
                     {
                         _logger.LogWarning("Skipping oversized entry {Entry} ({Size} bytes, limit {Max}).", entry.FullName, entry.Length, MaxZipEntryBytes);
@@ -216,6 +342,13 @@ public class ObsidianIndexer
                         cleanPath = entry.FullName[(firstSlashIdx + 1)..];
                     }
 
+                    // Skip entries outside the requested top-level folders before even reading
+                    // their content, so excluded files never reach chunking/embedding.
+                    if (includeFolders.Count > 0 && !includeFolders.Contains(TopLevelFolder(cleanPath)))
+                    {
+                        continue;
+                    }
+
                     var title = Path.GetFileNameWithoutExtension(entry.Name);
 
                     using var reader = new StreamReader(entry.Open());
@@ -223,11 +356,12 @@ public class ObsidianIndexer
 
                     var fileChunks = SegmentMarkdown(fileContent, cleanPath, title, docSourceType);
                     accumulatedChunks.AddRange(fileChunks);
-                    fileCount++;
+                    matchedCount++;
                 }
             }
 
-            _logger.LogInformation("Successfully parsed {FileCount} Markdown files from GitHub ZIP.", fileCount);
+            _logger.LogInformation("Successfully parsed {FileCount} Markdown files from GitHub ZIP.", matchedCount);
+            LogFolderFilterSummary(docSourceType, matchedCount, totalCount, includeFolders);
         }
         catch (Exception ex)
         {

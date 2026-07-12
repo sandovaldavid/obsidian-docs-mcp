@@ -15,6 +15,8 @@ public class DatabaseService : IDatabaseService
     private readonly string _connectionString;
     private readonly ILogger<DatabaseService> _logger;
 
+    public string DbPath { get; }
+
     public DatabaseService(IConfiguration configuration, ILogger<DatabaseService> logger)
     {
         _logger = logger;
@@ -32,6 +34,7 @@ public class DatabaseService : IDatabaseService
         {
             Directory.CreateDirectory(directory);
         }
+        DbPath = Path.GetFullPath(dbPath);
         _connectionString = $"Data Source={dbPath}";
     }
 
@@ -101,6 +104,7 @@ public class DatabaseService : IDatabaseService
             deleteFtsCmd.CommandText = "DELETE FROM ChunksFTS;";
             await deleteFtsCmd.ExecuteNonQueryAsync();
 
+            int insertedCount = 0;
             foreach (var chunk in chunks)
             {
                 // Save to the main table
@@ -135,6 +139,12 @@ public class DatabaseService : IDatabaseService
                 insertFtsCmd.Parameters.AddWithValue("$header", chunk.Header);
                 insertFtsCmd.Parameters.AddWithValue("$content", chunk.Content);
                 await insertFtsCmd.ExecuteNonQueryAsync();
+
+                insertedCount++;
+                if (insertedCount % 500 == 0)
+                {
+                    _logger.LogInformation("Inserted {Progress}/{Total} chunks into database...", insertedCount, chunks.Count);
+                }
             }
 
             await transaction.CommitAsync();
@@ -188,7 +198,7 @@ public class DatabaseService : IDatabaseService
                     Header = reader.GetString(1),
                     Content = reader.GetString(2),
                     FilePath = reader.GetString(3),
-                    Score = score,
+                    MatchPercent = Math.Clamp(score * 100, 0, 100),
                     SourceType = "Keyword"
                 });
             }
@@ -243,7 +253,7 @@ public class DatabaseService : IDatabaseService
                 Title = title,
                 Header = header,
                 Content = content,
-                Score = similarity,
+                MatchPercent = Math.Clamp(similarity * 100, 0, 100),
                 SourceType = "Semantic"
             };
 
