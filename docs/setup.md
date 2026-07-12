@@ -95,7 +95,9 @@ Any client with MCP registry support can discover this server via its published 
 
 ## Initial indexing
 
-The first time you use the server, the documentation index is empty. Build it with:
+The first time you run the server (with no CLI arguments — i.e. as the MCP server itself), if the local index is empty it automatically downloads a periodically-regenerated prebuilt index (a SQLite database with embeddings already computed) instead of embedding everything locally, so search works within seconds. It only falls back to a live reindex if that download isn't available.
+
+To force a fresh reindex yourself (e.g. to pick up recent Obsidian doc changes, or to restrict which folders get indexed), run:
 
 ```bash
 obsidian-docs-mcp index
@@ -103,7 +105,20 @@ obsidian-docs-mcp index
 
 This downloads the latest Obsidian Developer Docs and User Help content from GitHub, generates embeddings via Ollama, and stores everything in a local SQLite database. It can take a few minutes depending on your machine and Ollama's speed.
 
-You can also trigger this from within an agent conversation by asking it to run the `ReindexDocumentation` tool — it runs in the background so it doesn't block your session.
+You can restrict indexing to specific top-level folders per source to cut that time down, e.g. limiting User Help to English, Spanish, and the sandbox examples instead of all 32 language folders:
+
+```bash
+obsidian-docs-mcp index en,es,Sandbox          # User Help only
+obsidian-docs-mcp index en,es,Sandbox en       # User Help and Developer Docs both restricted
+```
+
+Check progress or the chunk count at any time with:
+
+```bash
+obsidian-docs-mcp index-status
+```
+
+You can also trigger a reindex from within an agent conversation by asking it to run the `ReindexDocumentation` tool (same optional folder-filter parameters as above) — it runs in the background so it doesn't block your session.
 
 ## Building from source
 
