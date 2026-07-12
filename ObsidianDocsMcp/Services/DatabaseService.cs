@@ -198,7 +198,7 @@ public class DatabaseService : IDatabaseService
                     Header = reader.GetString(1),
                     Content = reader.GetString(2),
                     FilePath = reader.GetString(3),
-                    Score = score,
+                    MatchPercent = Math.Clamp(score * 100, 0, 100),
                     SourceType = "Keyword"
                 });
             }
@@ -253,7 +253,7 @@ public class DatabaseService : IDatabaseService
                 Title = title,
                 Header = header,
                 Content = content,
-                Score = similarity,
+                MatchPercent = Math.Clamp(similarity * 100, 0, 100),
                 SourceType = "Semantic"
             };
 
