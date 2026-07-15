@@ -12,6 +12,10 @@ namespace ObsidianDocsMcp.Services;
 /// </summary>
 public class SearchService
 {
+    // Keep the RRF candidate pool stable for the MCP default (3) and eval depth (10), so the
+    // evaluated top three are the same top three returned to MCP clients.
+    private const int MinimumFusionCandidates = 20;
+
     private readonly IDatabaseService _dbService;
     private readonly IEmbeddingService _embeddingService;
     private readonly ILogger<SearchService> _logger;
@@ -28,8 +32,10 @@ public class SearchService
 
     public async Task<List<SearchResult>> SearchAsync(string query, int limit)
     {
+        var candidateLimit = Math.Max(limit * 2, MinimumFusionCandidates);
+
         // 1. Run FTS5 (keyword) search
-        var ftsResults = await _dbService.FtsSearchAsync(query, limit * 2);
+        var ftsResults = await _dbService.FtsSearchAsync(query, candidateLimit);
 
         // 2. Get the query embedding and run the vector (semantic) search
         List<SearchResult> vectorResults = new();
@@ -38,7 +44,7 @@ public class SearchService
             var queryVector = await _embeddingService.GetEmbeddingAsync(EmbeddingTextFormatter.FormatQuery(query));
             if (queryVector.Length > 0)
             {
-                vectorResults = await _dbService.VectorSearchAsync(queryVector, limit * 2);
+                vectorResults = await _dbService.VectorSearchAsync(queryVector, candidateLimit);
             }
         }
         catch (Exception ex)

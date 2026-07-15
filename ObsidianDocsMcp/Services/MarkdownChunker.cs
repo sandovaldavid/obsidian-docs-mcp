@@ -42,7 +42,9 @@ public static class MarkdownChunker
                 var partLength = Math.Min(MaxChunkChars, trimmed.Length - offset);
                 var part = trimmed.Substring(offset, partLength);
                 var partHeader = needsSplit ? $"{header} (Part {(offset / MaxChunkChars) + 1})" : header;
-                var chunkId = GenerateHash($"{relativePath}_{chunkIndex}_{partHeader}");
+                // Relative paths can exist in both documentation sources (for example en/Home.md).
+                // Keep their identities distinct so one source cannot replace the other's chunk.
+                var chunkId = GenerateHash($"{sourceName}_{relativePath}_{chunkIndex}_{partHeader}");
                 chunks.Add(new SectionChunk
                 {
                     Id = chunkId,

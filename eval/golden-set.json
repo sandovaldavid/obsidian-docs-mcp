@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "docsSnapshot": {
     "userHelpRef": "f9b17275eade57af64d545bb057a791548dc91e9",
     "developerDocsRef": "2d0e942f03b23ed94ebda3c610ed074662ed63db",
@@ -159,7 +159,7 @@
       "query": "optimize plugin load time at startup",
       "category": "developer",
       "relevant": [
-        { "filePath": "en/Plugins/Guides/Optimizing plugin load time.md", "header": null, "grade": 2 }
+        { "filePath": "en/Plugins/Guides/Optimize plugin load time.md", "header": null, "grade": 2 }
       ]
     },
     {
@@ -183,7 +183,8 @@
       "query": "what are deferred views and how do I handle them",
       "category": "developer",
       "relevant": [
-        { "filePath": "en/Plugins/Guides/Understanding deferred views.md", "header": null, "grade": 2 }
+        { "filePath": "en/Reference/TypeScript API/WorkspaceLeaf/isDeferred.md", "header": null, "grade": 2 },
+        { "filePath": "en/Reference/TypeScript API/WorkspaceLeaf/loadIfDeferred.md", "header": null, "grade": 1 }
       ]
     },
     {

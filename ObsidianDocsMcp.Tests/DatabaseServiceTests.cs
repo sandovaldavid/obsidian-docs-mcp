@@ -104,6 +104,18 @@ public sealed class DatabaseServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task FtsSearch_TreatsPunctuationAsText()
+    {
+        await _db.InitializeDatabaseAsync();
+        await _db.SaveChunksAsync([Chunk("manifest", "The manifest.json file defines a plugin.")]);
+
+        var results = await _db.FtsSearchAsync("manifest.json", 10);
+
+        Assert.Single(results);
+        Assert.Equal("en/manifest.md", results[0].FilePath);
+    }
+
+    [Fact]
     public async Task VectorSearch_ReturnsTopKInDescendingSimilarityOrder()
     {
         await _db.InitializeDatabaseAsync();

@@ -109,6 +109,7 @@ public class MetricsTests
 
         Assert.Equal(1.0, metrics["recall@3"]);
         Assert.Equal(1.0, metrics["mrr"]);
+        Assert.Equal(1.0 / 3.0, metrics["precision@3"], 6);
     }
 
     [Fact]

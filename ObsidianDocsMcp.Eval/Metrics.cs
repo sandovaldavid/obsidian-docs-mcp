@@ -63,14 +63,7 @@ public static class Metrics
         {
             metrics[$"recall@{k}"] = firstMatchRank.Count(rank => rank.HasValue && rank.Value <= k) / (double)relevant.Count;
 
-            int hits = 0;
-            for (int pos = 0; pos < Math.Min(k, ranked.Count); pos++)
-            {
-                if (relevant.Any(r => IsMatch(r, ranked[pos])))
-                {
-                    hits++;
-                }
-            }
+            var hits = firstMatchRank.Count(rank => rank.HasValue && rank.Value <= k);
             metrics[$"precision@{k}"] = hits / (double)k;
         }
 

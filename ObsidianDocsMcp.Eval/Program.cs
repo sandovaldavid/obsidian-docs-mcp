@@ -102,19 +102,24 @@ int Validate(Dictionary<string, string> opts)
     // Annotated paths go stale when the upstream docs restructure, so every eval run validates
     // them against the actual indexed corpus first — a silently-missing path would otherwise
     // just read as a retrieval miss and poison the metrics.
-    var indexedPaths = new HashSet<string>();
+    var indexedDocs = new Dictionary<string, HashSet<string>>();
     var originalByNormalized = new Dictionary<string, string>();
     using (var connection = new Microsoft.Data.Sqlite.SqliteConnection($"Data Source={dbPath}"))
     {
         connection.Open();
         var cmd = connection.CreateCommand();
-        cmd.CommandText = "SELECT DISTINCT FilePath FROM Chunks;";
+        cmd.CommandText = "SELECT FilePath, Header FROM Chunks;";
         using var reader = cmd.ExecuteReader();
         while (reader.Read())
         {
             var path = reader.GetString(0);
             var normalized = Metrics.NormalizePath(path);
-            indexedPaths.Add(normalized);
+            if (!indexedDocs.TryGetValue(normalized, out var headers))
+            {
+                headers = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                indexedDocs[normalized] = headers;
+            }
+            headers.Add(reader.GetString(1));
             originalByNormalized[normalized] = path;
         }
     }
@@ -124,29 +129,36 @@ int Validate(Dictionary<string, string> opts)
     {
         foreach (var doc in query.Relevant)
         {
-            if (indexedPaths.Contains(Metrics.NormalizePath(doc.FilePath)))
+            var normalizedPath = Metrics.NormalizePath(doc.FilePath);
+            if (!indexedDocs.TryGetValue(normalizedPath, out var headers))
             {
+                missing++;
+                Console.WriteLine($"MISSING PATH [{query.Id}] {doc.FilePath}");
+                var fileName = Path.GetFileName(normalizedPath);
+                var suggestions = originalByNormalized
+                    .Where(kv => Path.GetFileName(kv.Key) == fileName)
+                    .Select(kv => kv.Value)
+                    .Take(3)
+                    .ToList();
+                suggestions.ForEach(s => Console.WriteLine($"  did you mean: {s}"));
                 continue;
             }
-            missing++;
-            Console.WriteLine($"MISSING [{query.Id}] {doc.FilePath}");
-            var fileName = Path.GetFileName(Metrics.NormalizePath(doc.FilePath));
-            var suggestions = originalByNormalized
-                .Where(kv => Path.GetFileName(kv.Key) == fileName)
-                .Select(kv => kv.Value)
-                .Take(3)
-                .ToList();
-            suggestions.ForEach(s => Console.WriteLine($"  did you mean: {s}"));
+
+            if (!string.IsNullOrEmpty(doc.Header) && !headers.Any(header => header.StartsWith(doc.Header, StringComparison.OrdinalIgnoreCase)))
+            {
+                missing++;
+                Console.WriteLine($"MISSING HEADER [{query.Id}] {doc.FilePath} :: {doc.Header}");
+            }
         }
     }
 
     if (missing > 0)
     {
-        Console.WriteLine($"{missing} annotated path(s) not present in the index ({indexedPaths.Count} indexed files). Fix eval/golden-set.json before running metrics.");
+        Console.WriteLine($"{missing} annotated path/header value(s) not present in the index ({indexedDocs.Count} indexed files). Fix eval/golden-set.json before running metrics.");
         return 1;
     }
 
-    Console.WriteLine($"All annotated paths exist in the index ({goldenSet.Queries.Count} queries, {indexedPaths.Count} indexed files).");
+    Console.WriteLine($"All annotated paths and headers exist in the index ({goldenSet.Queries.Count} queries, {indexedDocs.Count} indexed files).");
     return 0;
 }
 
@@ -155,6 +167,7 @@ async Task RunAsync(Dictionary<string, string> opts)
     var goldenSet = GoldenSet.Load(Require(opts, "golden-set"));
     var dbPath = Require(opts, "db");
     var label = Require(opts, "label");
+    ValidateLabel(label);
     var outputDir = opts.GetValueOrDefault("output", Path.Combine("eval", "results"));
     var depth = int.Parse(opts.GetValueOrDefault("depth", "10"));
 
@@ -270,8 +283,8 @@ static IEnumerable<(string Metric, double Value)> OrderedMetrics(Dictionary<stri
 static ServiceProvider BuildServiceProvider(Dictionary<string, string?> settings)
 {
     var configuration = new ConfigurationBuilder()
-        .AddInMemoryCollection(settings)
         .AddEnvironmentVariables()
+        .AddInMemoryCollection(settings)
         .Build();
 
     // Mirrors the main Program.cs service graph, minus the MCP transport.
@@ -321,6 +334,17 @@ static string Require(Dictionary<string, string> opts, string key) =>
     opts.TryGetValue(key, out var value)
         ? value
         : throw new ArgumentException($"Missing required option --{key}.");
+
+static void ValidateLabel(string label)
+{
+    if (string.IsNullOrWhiteSpace(label)
+        || label is "." or ".."
+        || label.IndexOfAny(['/', '\\']) >= 0
+        || label.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
+    {
+        throw new ArgumentException("--label must be a file name without path separators.");
+    }
+}
 
 static void PrintUsage()
 {

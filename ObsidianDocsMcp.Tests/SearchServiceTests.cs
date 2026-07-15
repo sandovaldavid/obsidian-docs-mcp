@@ -20,7 +20,8 @@ public class SearchServiceTests
     {
         public List<SearchResult> FtsResults { get; init; } = new();
         public List<SearchResult> VectorResults { get; init; } = new();
-        public int? FtsLimitSeen { get; private set; }
+        public List<int> FtsLimits { get; } = new();
+        public List<int> VectorLimits { get; } = new();
         public bool VectorSearchCalled { get; private set; }
 
         public string DbPath => ":memory:";
@@ -30,13 +31,14 @@ public class SearchServiceTests
 
         public Task<List<SearchResult>> FtsSearchAsync(string queryText, int limit)
         {
-            FtsLimitSeen = limit;
+            FtsLimits.Add(limit);
             return Task.FromResult(FtsResults);
         }
 
         public Task<List<SearchResult>> VectorSearchAsync(float[] queryVector, int limit)
         {
             VectorSearchCalled = true;
+            VectorLimits.Add(limit);
             return Task.FromResult(VectorResults);
         }
     }
@@ -72,14 +74,16 @@ public class SearchServiceTests
     }
 
     [Fact]
-    public async Task OverfetchesCandidatesAtTwiceTheRequestedLimit()
+    public async Task UsesStableCandidatePoolForMcpAndEvalDepths()
     {
         var db = new FakeDatabaseService();
         var service = CreateService(db, new FakeEmbeddingService { Vector = [1f, 0f] });
 
         await service.SearchAsync("query", 3);
+        await service.SearchAsync("query", 10);
 
-        Assert.Equal(6, db.FtsLimitSeen);
+        Assert.Equal([20, 20], db.FtsLimits);
+        Assert.Equal([20, 20], db.VectorLimits);
     }
 
     [Fact]

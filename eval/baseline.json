@@ -1,0 +1,20 @@
+{
+  "label": "baseline",
+  "timestampUtc": "2026-07-15T12:36:23.6042882Z",
+  "embeddingModel": "nomic-embed-text",
+  "chunkCount": 6549,
+  "meanSearchLatencyMs": 118.6,
+  "metrics": {
+    "recall@1": 0.625,
+    "precision@1": 0.65,
+    "recall@3": 0.75,
+    "precision@3": 0.2666666666666667,
+    "recall@5": 0.8375,
+    "precision@5": 0.1850000000000001,
+    "recall@10": 0.875,
+    "precision@10": 0.09750000000000006,
+    "mrr": 0.7372916666666666,
+    "ndcg@10": 0.7676253738086263
+  },
+  "perQuery": []
+}

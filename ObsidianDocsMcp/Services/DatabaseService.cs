@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Configuration;
@@ -177,9 +178,16 @@ public class DatabaseService : IDatabaseService
             ORDER BY rank ASC
             LIMIT $limit;";
 
-        // Simple escaping of characters that would otherwise break FTS5 syntax.
-        var sanitizedQuery = queryText.Replace("'", "''");
-        searchCmd.Parameters.AddWithValue("$query", sanitizedQuery);
+        // FTS5 MATCH interprets punctuation and keywords such as AND as query syntax. Search the
+        // user's lexical tokens as quoted terms instead, so inputs like "manifest.json" remain
+        // valid keyword searches instead of falling back to vector-only retrieval.
+        var ftsQuery = string.Join(" ", Regex.Matches(queryText, @"[\p{L}\p{N}_]+")
+            .Select(match => $"\"{match.Value.Replace("\"", "\"\"")}\""));
+        if (string.IsNullOrEmpty(ftsQuery))
+        {
+            return results;
+        }
+        searchCmd.Parameters.AddWithValue("$query", ftsQuery);
         searchCmd.Parameters.AddWithValue("$limit", limit);
 
         try

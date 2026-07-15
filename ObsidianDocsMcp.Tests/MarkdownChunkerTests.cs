@@ -150,4 +150,13 @@ public class MarkdownChunkerTests
         Assert.Equal(first.Select(c => c.Id), second.Select(c => c.Id));
         Assert.All(first, c => Assert.Matches("^[0-9a-f]{64}$", c.Id));
     }
+
+    [Fact]
+    public void Segment_DistinguishesIdenticalPathsFromDifferentSources()
+    {
+        var developerChunk = MarkdownChunker.Segment("Content.", "en/Home.md", "Home", "Developer Docs");
+        var userHelpChunk = MarkdownChunker.Segment("Content.", "en/Home.md", "Home", "User Help");
+
+        Assert.NotEqual(developerChunk[0].Id, userHelpChunk[0].Id);
+    }
 }
