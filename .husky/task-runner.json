@@ -5,7 +5,7 @@
          "name": "dotnet-format-verify",
          "group": "pre-commit",
          "command": "dotnet",
-         "args": ["format", "ObsidianDocsMcp/ObsidianDocsMcp.csproj", "--verify-no-changes", "--include", "${staged}"],
+         "args": ["format", "ObsidianDocsMcp.slnx", "--verify-no-changes", "--include", "${staged}"],
          "include": ["**/*.cs"]
       }
    ]

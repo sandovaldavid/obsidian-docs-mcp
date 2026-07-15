@@ -1,0 +1,336 @@
+{
+  "version": 2,
+  "docsSnapshot": {
+    "userHelpRef": "f9b17275eade57af64d545bb057a791548dc91e9",
+    "developerDocsRef": "2d0e942f03b23ed94ebda3c610ed074662ed63db",
+    "userHelpZipUrl": "https://github.com/obsidianmd/obsidian-help/archive/f9b17275eade57af64d545bb057a791548dc91e9.zip",
+    "developerDocsZipUrl": "https://github.com/obsidianmd/obsidian-developer-docs/archive/2d0e942f03b23ed94ebda3c610ed074662ed63db.zip"
+  },
+  "queries": [
+    {
+      "id": "q001",
+      "query": "how do I build my first Obsidian plugin",
+      "category": "developer",
+      "relevant": [
+        { "filePath": "en/Plugins/Getting started/Build a plugin.md", "header": null, "grade": 2 },
+        { "filePath": "en/Plugins/Getting started/Anatomy of a plugin.md", "header": null, "grade": 1 }
+      ]
+    },
+    {
+      "id": "q002",
+      "query": "plugin lifecycle onload and onunload",
+      "category": "developer",
+      "relevant": [
+        { "filePath": "en/Plugins/Getting started/Anatomy of a plugin.md", "header": null, "grade": 2 }
+      ]
+    },
+    {
+      "id": "q003",
+      "query": "WorkspaceLeaf",
+      "category": "api-symbol",
+      "relevant": [
+        { "filePath": "en/Reference/TypeScript API/WorkspaceLeaf.md", "header": null, "grade": 2 }
+      ]
+    },
+    {
+      "id": "q004",
+      "query": "manifest.json required fields for a plugin",
+      "category": "developer",
+      "relevant": [
+        { "filePath": "en/Reference/Manifest.md", "header": null, "grade": 2 }
+      ]
+    },
+    {
+      "id": "q005",
+      "query": "add a settings tab to my plugin",
+      "category": "developer",
+      "relevant": [
+        { "filePath": "en/Plugins/User interface/Settings.md", "header": null, "grade": 2 }
+      ]
+    },
+    {
+      "id": "q006",
+      "query": "register a custom view in the workspace",
+      "category": "developer",
+      "relevant": [
+        { "filePath": "en/Plugins/User interface/Views.md", "header": null, "grade": 2 },
+        { "filePath": "en/Plugins/User interface/Workspace.md", "header": null, "grade": 1 }
+      ]
+    },
+    {
+      "id": "q007",
+      "query": "add a command to the command palette",
+      "category": "developer",
+      "relevant": [
+        { "filePath": "en/Plugins/User interface/Commands.md", "header": null, "grade": 2 }
+      ]
+    },
+    {
+      "id": "q008",
+      "query": "create a modal dialog that asks for user input",
+      "category": "developer",
+      "relevant": [
+        { "filePath": "en/Plugins/User interface/Modals.md", "header": null, "grade": 2 }
+      ]
+    },
+    {
+      "id": "q009",
+      "query": "add an icon to the ribbon",
+      "category": "developer",
+      "relevant": [
+        { "filePath": "en/Plugins/User interface/Ribbon actions.md", "header": null, "grade": 2 }
+      ]
+    },
+    {
+      "id": "q010",
+      "query": "render a custom code block with a markdown post processor",
+      "category": "developer",
+      "relevant": [
+        { "filePath": "en/Plugins/Editor/Markdown post processing.md", "header": null, "grade": 2 }
+      ]
+    },
+    {
+      "id": "q011",
+      "query": "extend the editor with CodeMirror 6 extensions",
+      "category": "developer",
+      "relevant": [
+        { "filePath": "en/Plugins/Editor/Editor extensions.md", "header": null, "grade": 2 },
+        { "filePath": "en/Plugins/Editor/Editor.md", "header": null, "grade": 1 }
+      ]
+    },
+    {
+      "id": "q012",
+      "query": "read and write files in the vault from a plugin",
+      "category": "developer",
+      "relevant": [
+        { "filePath": "en/Plugins/Vault.md", "header": null, "grade": 2 }
+      ]
+    },
+    {
+      "id": "q013",
+      "query": "listen for an event when a file is modified",
+      "category": "developer",
+      "relevant": [
+        { "filePath": "en/Plugins/Events.md", "header": null, "grade": 2 }
+      ]
+    },
+    {
+      "id": "q014",
+      "query": "submit my plugin to the community plugin directory",
+      "category": "developer",
+      "relevant": [
+        { "filePath": "en/Plugins/Releasing/Submit your plugin.md", "header": null, "grade": 2 }
+      ]
+    },
+    {
+      "id": "q015",
+      "query": "plugin developer policies and guidelines",
+      "category": "developer",
+      "relevant": [
+        { "filePath": "en/Plugins/Releasing/Plugin guidelines.md", "header": null, "grade": 2 }
+      ]
+    },
+    {
+      "id": "q016",
+      "query": "release my plugin automatically with GitHub Actions",
+      "category": "developer",
+      "relevant": [
+        { "filePath": "en/Plugins/Releasing/Release your plugin with GitHub Actions.md", "header": null, "grade": 2 }
+      ]
+    },
+    {
+      "id": "q017",
+      "query": "how to build a custom theme",
+      "category": "developer",
+      "relevant": [
+        { "filePath": "en/Themes/App themes/Build a theme.md", "header": null, "grade": 2 }
+      ]
+    },
+    {
+      "id": "q018",
+      "query": "develop and test my plugin on mobile",
+      "category": "developer",
+      "relevant": [
+        { "filePath": "en/Plugins/Getting started/Mobile development.md", "header": null, "grade": 2 }
+      ]
+    },
+    {
+      "id": "q019",
+      "query": "optimize plugin load time at startup",
+      "category": "developer",
+      "relevant": [
+        { "filePath": "en/Plugins/Guides/Optimize plugin load time.md", "header": null, "grade": 2 }
+      ]
+    },
+    {
+      "id": "q020",
+      "query": "add a status bar item",
+      "category": "developer",
+      "relevant": [
+        { "filePath": "en/Plugins/User interface/Status bar.md", "header": null, "grade": 2 }
+      ]
+    },
+    {
+      "id": "q021",
+      "query": "add an entry to the file context menu",
+      "category": "developer",
+      "relevant": [
+        { "filePath": "en/Plugins/User interface/Context menus.md", "header": null, "grade": 2 }
+      ]
+    },
+    {
+      "id": "q022",
+      "query": "what are deferred views and how do I handle them",
+      "category": "developer",
+      "relevant": [
+        { "filePath": "en/Reference/TypeScript API/WorkspaceLeaf/isDeferred.md", "header": null, "grade": 2 },
+        { "filePath": "en/Reference/TypeScript API/WorkspaceLeaf/loadIfDeferred.md", "header": null, "grade": 1 }
+      ]
+    },
+    {
+      "id": "q023",
+      "query": "hwo to make a plugin for obsidan",
+      "category": "developer-typo",
+      "relevant": [
+        { "filePath": "en/Plugins/Getting started/Build a plugin.md", "header": null, "grade": 2 }
+      ]
+    },
+    {
+      "id": "q024",
+      "query": "how do I create a new vault",
+      "category": "user-help",
+      "relevant": [
+        { "filePath": "en/Getting started/Create a vault.md", "header": null, "grade": 2 }
+      ]
+    },
+    {
+      "id": "q025",
+      "query": "basic markdown formatting bold italic headings",
+      "category": "user-help",
+      "relevant": [
+        { "filePath": "en/Editing and formatting/Basic formatting syntax.md", "header": null, "grade": 2 },
+        { "filePath": "en/Editing and formatting/Advanced formatting syntax.md", "header": null, "grade": 1 }
+      ]
+    },
+    {
+      "id": "q026",
+      "query": "create callout boxes like note warning tip",
+      "category": "user-help",
+      "relevant": [
+        { "filePath": "en/Editing and formatting/Callouts.md", "header": null, "grade": 2 }
+      ]
+    },
+    {
+      "id": "q027",
+      "query": "add properties frontmatter metadata to a note",
+      "category": "user-help",
+      "relevant": [
+        { "filePath": "en/Editing and formatting/Properties.md", "header": null, "grade": 2 }
+      ]
+    },
+    {
+      "id": "q028",
+      "query": "link one note to another note",
+      "category": "user-help",
+      "relevant": [
+        { "filePath": "en/Linking notes and files/Internal links.md", "header": null, "grade": 2 }
+      ]
+    },
+    {
+      "id": "q029",
+      "query": "embed an image or file inside a note",
+      "category": "user-help",
+      "relevant": [
+        { "filePath": "en/Linking notes and files/Embed files.md", "header": null, "grade": 2 }
+      ]
+    },
+    {
+      "id": "q030",
+      "query": "what is the canvas feature",
+      "category": "user-help",
+      "relevant": [
+        { "filePath": "en/Plugins/Canvas.md", "header": null, "grade": 2 }
+      ]
+    },
+    {
+      "id": "q031",
+      "query": "create daily notes automatically",
+      "category": "user-help",
+      "relevant": [
+        { "filePath": "en/Plugins/Daily notes.md", "header": null, "grade": 2 }
+      ]
+    },
+    {
+      "id": "q032",
+      "query": "visualize connections between notes in a graph",
+      "category": "user-help",
+      "relevant": [
+        { "filePath": "en/Plugins/Graph view.md", "header": null, "grade": 2 }
+      ]
+    },
+    {
+      "id": "q033",
+      "query": "insert predefined text with templates",
+      "category": "user-help",
+      "relevant": [
+        { "filePath": "en/Plugins/Templates.md", "header": null, "grade": 2 }
+      ]
+    },
+    {
+      "id": "q034",
+      "query": "search operators to filter notes",
+      "category": "user-help",
+      "relevant": [
+        { "filePath": "en/Plugins/Search.md", "header": null, "grade": 2 }
+      ]
+    },
+    {
+      "id": "q035",
+      "query": "how does obsidian store my data locally",
+      "category": "user-help",
+      "relevant": [
+        { "filePath": "en/Files and folders/How Obsidian stores data.md", "header": null, "grade": 2 }
+      ]
+    },
+    {
+      "id": "q036",
+      "query": "which file formats can I put in my vault",
+      "category": "user-help",
+      "relevant": [
+        { "filePath": "en/Files and folders/Accepted file formats.md", "header": null, "grade": 2 }
+      ]
+    },
+    {
+      "id": "q037",
+      "query": "sync my notes between devices with obsidian sync",
+      "category": "user-help",
+      "relevant": [
+        { "filePath": "en/Obsidian Sync/Set up Obsidian Sync.md", "header": null, "grade": 2 }
+      ]
+    },
+    {
+      "id": "q038",
+      "query": "install plugins made by the community",
+      "category": "user-help",
+      "relevant": [
+        { "filePath": "en/Extending Obsidian/Community plugins.md", "header": null, "grade": 2 }
+      ]
+    },
+    {
+      "id": "q039",
+      "query": "calouts syntax",
+      "category": "user-help-typo",
+      "relevant": [
+        { "filePath": "en/Editing and formatting/Callouts.md", "header": null, "grade": 2 }
+      ]
+    },
+    {
+      "id": "q040",
+      "query": "open a note from another application with a URI",
+      "category": "user-help",
+      "relevant": [
+        { "filePath": "en/Extending Obsidian/Obsidian URI.md", "header": null, "grade": 2 }
+      ]
+    }
+  ]
+}
