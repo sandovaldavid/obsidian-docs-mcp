@@ -48,11 +48,45 @@ Once the package is published on NuGet.org, anyone can install and configure it 
 dotnet tool install -g obsidian-docs-mcp
 ```
 
-### 2. Install the Agent Skill (open catalog)
-So AI agents (Claude Code, Cursor, Codex, etc.) know how to use this MCP server optimally to save tokens, install the skill natively from the open catalog:
+### 2. Wire up the Skill + MCP Server
+
+**Option A — One-command plugin (Claude Code, Codex, Antigravity CLI)**
+These three have a real plugin system that bundles the skill and the MCP server registration into a single install. Each uses a completely different manifest format under the hood (`.claude-plugin/`, `.agents/plugins/` + `.codex-plugin/`, and a flat `plugin.json`, respectively — see [`plugins/obsidian-docs-mcp/`](plugins/obsidian-docs-mcp)), but all three were verified end-to-end locally: `validate` → `marketplace add`/clone → `install` → 1 skill + 1 MCP server enabled → clean `uninstall`.
+
+Claude Code:
+```bash
+claude plugin marketplace add sandovaldavid/obsidian-docs-mcp
+claude plugin install obsidian-docs-mcp@obsidian-docs-mcp
+```
+
+Codex:
+```bash
+codex plugin marketplace add sandovaldavid/obsidian-docs-mcp
+codex plugin add obsidian-docs-mcp@obsidian-docs-mcp
+```
+
+Antigravity CLI (`agy`) — its `plugin install` only takes a local directory, so clone first:
+```bash
+git clone https://github.com/sandovaldavid/obsidian-docs-mcp
+agy plugin install obsidian-docs-mcp/plugins/obsidian-docs-mcp
+```
+
+**Option B — Skill + MCP separately (every other client)**
+Install the skill from the open catalog:
 ```bash
 npx skills add sandovaldavid/obsidian-docs-mcp
 ```
+This detects your installed agent(s) interactively. To target one explicitly instead:
+```bash
+npx skills add sandovaldavid/obsidian-docs-mcp -a claude-code    # Claude Code
+npx skills add sandovaldavid/obsidian-docs-mcp -a antigravity    # Antigravity
+npx skills add sandovaldavid/obsidian-docs-mcp -a codex          # Codex
+npx skills add sandovaldavid/obsidian-docs-mcp -a github-copilot # GitHub Copilot
+npx skills add sandovaldavid/obsidian-docs-mcp -a opencode       # OpenCode
+```
+Codex, Antigravity, OpenCode, GitHub Copilot, Cursor, Gemini CLI, Cline, and Zed all read the same universal `.agents/skills/` project directory, so one install (or cloning this repo, which commits it) covers all of them at once. Claude Code is the exception — it reads `.claude/skills/`, so its install creates a symlink there pointing back at the same canonical copy.
+
+Then register the MCP server for your client — see "⚙️ Configuring the MCP Server in Clients" below.
 
 ---
 
@@ -72,7 +106,24 @@ To add the MCP server natively to Claude Code, run:
   claude mcp add --scope project --transport stdio obsidian-docs-mcp -- obsidian-docs-mcp
   ```
 
-### 2. Claude Desktop
+### 2. Codex (CLI)
+```bash
+codex mcp add obsidian-docs-mcp -- obsidian-docs-mcp
+```
+
+### 3. Antigravity CLI (`agy`)
+No `mcp add` subcommand yet — add the server directly to `~/.gemini/antigravity-cli/mcp_config.json` (global; there's no per-project config file):
+```json
+{
+  "mcpServers": {
+    "obsidian-docs-mcp": {
+      "command": "obsidian-docs-mcp"
+    }
+  }
+}
+```
+
+### 4. Claude Desktop
 Add the server to your `claude_desktop_config.json`:
 - **Linux/WSL**: `~/.config/Claude/claude_desktop_config.json`
 - **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
@@ -88,7 +139,7 @@ Add the server to your `claude_desktop_config.json`:
 }
 ```
 
-### 3. Cursor
+### 5. Cursor
 Add the server to `~/.cursor/mcp.json` (global) or `.cursor/mcp.json` in your project (local):
 ```json
 {
@@ -100,7 +151,7 @@ Add the server to `~/.cursor/mcp.json` (global) or `.cursor/mcp.json` in your pr
 }
 ```
 
-### 4. VS Code (GitHub Copilot Chat / MCP)
+### 6. VS Code (GitHub Copilot Chat / MCP)
 Create `.vscode/mcp.json` in your workspace — note VS Code uses `servers` (not `mcpServers`) and requires an explicit `type`:
 ```json
 {
@@ -113,7 +164,7 @@ Create `.vscode/mcp.json` in your workspace — note VS Code uses `servers` (not
 }
 ```
 
-### 5. Other MCP clients
+### 7. Other MCP clients
 Any client that supports the [MCP registry](https://modelcontextprotocol.io/) can discover this server via its published manifest: `io.github.sandovaldavid/obsidian-docs-mcp` (see [`.mcp/server.json`](ObsidianDocsMcp/.mcp/server.json)). For clients without registry support, the pattern above (a `stdio` server running the `obsidian-docs-mcp` command with no arguments) applies generically — check your client's docs for its specific config file location and key name (`mcpServers` vs `servers`).
 
 ---
