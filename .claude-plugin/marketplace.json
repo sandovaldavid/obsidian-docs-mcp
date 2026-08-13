@@ -1,0 +1,16 @@
+{
+  "name": "obsidian-docs-mcp",
+  "owner": {
+    "name": "David Sandoval",
+    "email": "dev@sandovaldavid.com",
+    "url": "https://github.com/sandovaldavid"
+  },
+  "description": "Single-plugin marketplace distributing the obsidian-docs-mcp skill + MCP server bundle.",
+  "plugins": [
+    {
+      "name": "obsidian-docs-mcp",
+      "source": "./",
+      "description": "Hybrid semantic + keyword search over the official Obsidian documentation (skill + MCP server)."
+    }
+  ]
+}
