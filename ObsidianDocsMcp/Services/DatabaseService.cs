@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Configuration;
@@ -177,9 +178,16 @@ public class DatabaseService : IDatabaseService
             ORDER BY rank ASC
             LIMIT $limit;";
 
-        // Simple escaping of characters that would otherwise break FTS5 syntax.
-        var sanitizedQuery = queryText.Replace("'", "''");
-        searchCmd.Parameters.AddWithValue("$query", sanitizedQuery);
+        // FTS5 MATCH interprets punctuation and keywords such as AND as query syntax. Search the
+        // user's lexical tokens as quoted terms instead, so inputs like "manifest.json" remain
+        // valid keyword searches instead of falling back to vector-only retrieval.
+        var ftsQuery = string.Join(" ", Regex.Matches(queryText, @"[\p{L}\p{N}_]+")
+            .Select(match => $"\"{match.Value.Replace("\"", "\"\"")}\""));
+        if (string.IsNullOrEmpty(ftsQuery))
+        {
+            return results;
+        }
+        searchCmd.Parameters.AddWithValue("$query", ftsQuery);
         searchCmd.Parameters.AddWithValue("$limit", limit);
 
         try
@@ -245,7 +253,7 @@ public class DatabaseService : IDatabaseService
             var embedding = new float[bytes.Length / sizeof(float)];
             Buffer.BlockCopy(bytes, 0, embedding, 0, bytes.Length);
 
-            double similarity = CosineSimilarity(queryVector, embedding);
+            double similarity = VectorMath.CosineSimilarity(queryVector, embedding);
 
             var result = new SearchResult
             {
@@ -287,31 +295,5 @@ public class DatabaseService : IDatabaseService
         countCmd.CommandText = "SELECT COUNT(*) FROM Chunks;";
         var count = await countCmd.ExecuteScalarAsync();
         return count != null ? Convert.ToInt32(count) : 0;
-    }
-
-    private static double CosineSimilarity(float[] vectorA, float[] vectorB)
-    {
-        if (vectorA.Length != vectorB.Length)
-        {
-            return 0.0;
-        }
-
-        double dotProduct = 0.0;
-        double normA = 0.0;
-        double normB = 0.0;
-
-        for (int i = 0; i < vectorA.Length; i++)
-        {
-            dotProduct += vectorA[i] * vectorB[i];
-            normA += vectorA[i] * vectorA[i];
-            normB += vectorB[i] * vectorB[i];
-        }
-
-        if (normA == 0.0 || normB == 0.0)
-        {
-            return 0.0;
-        }
-
-        return dotProduct / (Math.Sqrt(normA) * Math.Sqrt(normB));
     }
 }
