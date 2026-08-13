@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "obsidian-docs-mcp",
+  "description": "Hybrid semantic + keyword search over the official Obsidian Developer Docs and User Help documentation. Bundles the obsidian-docs-retriever skill and registers the obsidian-docs-mcp MCP server.",
+  "version": "0.4.0",
+  "author": {
+    "name": "David Sandoval",
+    "email": "dev@sandovaldavid.com",
+    "url": "https://github.com/sandovaldavid"
+  },
+  "homepage": "https://sandovaldavid.github.io/obsidian-docs-mcp/",
+  "repository": "https://github.com/sandovaldavid/obsidian-docs-mcp",
+  "license": "MIT",
+  "keywords": ["obsidian", "mcp", "documentation", "search", "rag"],
+  "mcpServers": {
+    "obsidian-docs-mcp": {
+      "command": "obsidian-docs-mcp"
+    }
+  }
+}

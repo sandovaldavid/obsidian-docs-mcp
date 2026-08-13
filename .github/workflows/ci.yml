@@ -19,10 +19,13 @@ jobs:
           dotnet-version: '10.0.x'
 
       - name: Restore
-        run: dotnet restore ObsidianDocsMcp/ObsidianDocsMcp.csproj
+        run: dotnet restore ObsidianDocsMcp.slnx
 
       - name: Build
-        run: dotnet build ObsidianDocsMcp/ObsidianDocsMcp.csproj --no-restore -c Release
+        run: dotnet build ObsidianDocsMcp.slnx --no-restore -c Release
+
+      - name: Test
+        run: dotnet test ObsidianDocsMcp.Tests/ObsidianDocsMcp.Tests.csproj --no-build -c Release
 
       # No --no-build here: a plain `dotnet build` on a multi-RuntimeIdentifiers project only
       # produces publish output for the host RID, but packing this McpServer-type package

@@ -1,0 +1,99 @@
+name: Retrieval Quality Eval
+
+# Scores the hybrid search against eval/golden-set.json (see eval/README.md): builds an index
+# from the golden set's pinned doc snapshots, validates the annotations, runs the retrieval
+# metrics (Recall@k, Precision@k, MRR, nDCG@10), and — once eval/baseline.json is committed —
+# fails on regressions of the headline metrics (Recall@3, MRR).
+#
+# Kept out of the per-PR path on purpose: it installs Ollama and embeds the whole corpus, which
+# takes far too long for every push. Runs weekly and on demand instead.
+
+on:
+  schedule:
+    - cron: '0 3 * * 2' # Weekly, Tuesday 03:00 UTC (docs-index publishes Mondays)
+  workflow_dispatch:
+    inputs:
+      model:
+        description: 'Ollama embedding model to evaluate'
+        required: false
+        default: 'nomic-embed-text'
+      label:
+        description: 'Label for the run report'
+        required: false
+        default: 'ci-run'
+
+permissions:
+  contents: read
+
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    env:
+      MODEL: ${{ github.event.inputs.model || 'nomic-embed-text' }}
+      LABEL: ${{ github.event.inputs.label || 'ci-run' }}
+      EVAL_DB: ${{ github.workspace }}/eval-index.db
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Install Ollama
+        run: curl -fsSL https://ollama.com/install.sh | sh
+
+      # The installer sets up a systemd service, but it isn't guaranteed to be up yet by the
+      # time the next step runs — start it explicitly and wait until it actually responds.
+      - name: Start Ollama server
+        run: |
+          ollama serve > /tmp/ollama-serve.log 2>&1 &
+          for i in $(seq 1 30); do
+            curl -s http://localhost:11434/api/tags > /dev/null 2>&1 && exit 0
+            sleep 1
+          done
+          echo "Ollama server did not become ready in time:"
+          cat /tmp/ollama-serve.log
+          exit 1
+
+      - name: Pull embedding model
+        run: ollama pull "$MODEL"
+
+      - name: Build (Release)
+        run: dotnet build ObsidianDocsMcp.slnx -c Release
+
+      - name: Build eval index from pinned snapshots
+        run: |
+          dotnet run --project ObsidianDocsMcp.Eval --no-build -c Release -- build-index \
+            --golden-set eval/golden-set.json --db "$EVAL_DB" --model "$MODEL"
+
+      - name: Validate golden-set annotations against the index
+        run: |
+          dotnet run --project ObsidianDocsMcp.Eval --no-build -c Release -- validate \
+            --golden-set eval/golden-set.json --db "$EVAL_DB"
+
+      - name: Run retrieval metrics
+        run: |
+          dotnet run --project ObsidianDocsMcp.Eval --no-build -c Release -- run \
+            --golden-set eval/golden-set.json --db "$EVAL_DB" --model "$MODEL" \
+            --label "$LABEL" --output eval/results | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Compare against baseline
+        run: |
+          if [ -f eval/baseline.json ]; then
+            dotnet run --project ObsidianDocsMcp.Eval --no-build -c Release -- compare \
+              --baseline eval/baseline.json --candidate "eval/results/$LABEL.json" \
+              --fail-on-regression | tee -a "$GITHUB_STEP_SUMMARY"
+          else
+            echo "No eval/baseline.json committed yet — skipping regression gate." | tee -a "$GITHUB_STEP_SUMMARY"
+            echo "Download this run's report artifact and commit it as eval/baseline.json to enable it." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload run report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eval-report-${{ env.LABEL }}
+          path: eval/results/*.json
+          if-no-files-found: ignore

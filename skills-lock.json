@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "obsidian-docs-retriever": {
+      "source": "sandovaldavid/obsidian-docs-mcp",
+      "sourceType": "github",
+      "skillPath": "SKILL.md",
+      "computedHash": "24f08414e954cbb393d6d734b3079e4db3501da5a5aca2e5e850cbd6b1988bc2"
+    }
+  }
+}

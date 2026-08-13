@@ -1,0 +1,6 @@
+{
+  "name": "obsidian-docs-mcp",
+  "version": "0.4.0",
+  "description": "Hybrid semantic + keyword search over the official Obsidian Developer Docs and User Help documentation. Bundles the obsidian-docs-retriever skill and registers the obsidian-docs-mcp MCP server.",
+  "skills": "./skills/"
+}
