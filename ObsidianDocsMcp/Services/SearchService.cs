@@ -41,7 +41,7 @@ public class SearchService
         List<SearchResult> vectorResults = new();
         try
         {
-            var queryVector = await _embeddingService.GetEmbeddingAsync(EmbeddingTextFormatter.FormatQuery(query));
+            var queryVector = await _embeddingService.GetEmbeddingAsync(query);
             if (queryVector.Length > 0)
             {
                 vectorResults = await _dbService.VectorSearchAsync(queryVector, candidateLimit);
