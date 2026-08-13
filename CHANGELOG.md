@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.5.0](https://github.com/sandovaldavid/obsidian-docs-mcp/compare/v0.4.1...v0.5.0) (2026-08-13)
+
+
+### Features
+
+* add skill and plugin install for claude, codex, antigravity ([#71](https://github.com/sandovaldavid/obsidian-docs-mcp/issues/71)) ([bbb63fd](https://github.com/sandovaldavid/obsidian-docs-mcp/commit/bbb63fd7a45f72c430b22051732afcc7648d2873))
+* add test suite and retrieval quality evaluation harness ([#69](https://github.com/sandovaldavid/obsidian-docs-mcp/issues/69)) ([2c089cb](https://github.com/sandovaldavid/obsidian-docs-mcp/commit/2c089cbc7cbb1d3e2a6605fcc23dc0af1325d4f6))
+
 ## [0.4.1](https://github.com/sandovaldavid/obsidian-docs-mcp/compare/v0.4.0...v0.4.1) (2026-07-12)
 
 
